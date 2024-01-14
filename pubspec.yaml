@@ -1,12 +1,13 @@
 name: remit
-description: Dart implementation of Remit.
+description: Dart implementation of Remit protocol.
 version: 0.0.0
 publish_to: none
 
 environment:
-    sdk: ">=2.18.0 <3.0.0"
+    sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
+    crypto: ^3.0.3
     http: ^1.1.0
     shelf: ^1.4.1
     shelf_router: ^1.1.4

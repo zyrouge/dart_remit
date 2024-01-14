@@ -14,6 +14,12 @@
       "languageVersion": "2.18"
     },
     {
+      "name": "crypto",
+      "rootUri": "file:///home/zyrouge/.pub-cache/hosted/pub.dev/crypto-3.0.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.19"
+    },
+    {
       "name": "http",
       "rootUri": "file:///home/zyrouge/.pub-cache/hosted/pub.dev/http-1.1.0",
       "packageUri": "lib/",
@@ -107,10 +113,10 @@
       "name": "remit",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "2.18"
+      "languageVersion": "3.0"
     }
   ],
-  "generated": "2023-08-08T14:11:00.545953Z",
+  "generated": "2024-01-14T15:38:08.467247Z",
   "generator": "pub",
-  "generatorVersion": "3.1.0-63.1.beta"
+  "generatorVersion": "3.3.0-174.3.beta"
 }

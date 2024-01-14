@@ -1,7 +1,7 @@
 import 'dart:io';
+import 'package:remit/exports.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
-import 'defaults.dart';
 
 class RemitServer {
   RemitServer._({
@@ -19,13 +19,16 @@ class RemitServer {
   String get host => http.address.host;
   int get port => http.port;
 
-  static Future<RemitServer> createServer() async {
+  static Future<RemitServer> createServer({
+    required final String host,
+    required final int port,
+  }) async {
     final shelf_router.Router app = shelf_router.Router();
     final HttpServer http = await shelf_io.serve(
       app.call,
-      RemitDefaults.universalHost,
-      RemitDefaults.universalPort,
-      poweredByHeader: 'Remit',
+      host,
+      port,
+      poweredByHeader: RemitHttpHeaders.userAgent,
     );
     return RemitServer._(app: app, http: http);
   }
