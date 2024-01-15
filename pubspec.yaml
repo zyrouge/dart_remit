@@ -7,8 +7,9 @@ environment:
     sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-    crypto: ^3.0.3
+    convert: ^3.1.1
     http: ^1.1.0
+    pointycastle: ^3.7.3
     shelf: ^1.4.1
     shelf_router: ^1.1.4
 

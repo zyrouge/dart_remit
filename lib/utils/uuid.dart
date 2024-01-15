@@ -1,6 +1,6 @@
 import 'dart:math';
 
-class UUID {
+abstract class UUID {
   static final Random random = Random.secure();
   static const String symbols =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -15,12 +15,12 @@ class UUID {
   }
 
   static String generateChar() => symbols[random.nextInt(symbolsLength)];
+  static String generateIdentifier() => generate(32);
   static String generateToken() => generate(128);
   static String generateInviteCode() => generate(6);
 }
 
 class SequentialUUIDGenerator {
-  int i = 0;
-
-  int next() => i++;
+  int _i = 0;
+  int next() => _i++;
 }

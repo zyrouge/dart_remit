@@ -13,7 +13,8 @@ class RemitSender {
 
   final Map<int, RemitSenderConnection> connections =
       <int, RemitSenderConnection>{};
-  final SequentialUUIDGenerator senderIdGenerator = SequentialUUIDGenerator();
+  final Map<String, int> tokens = <String, int>{};
+  final SequentialUUIDGenerator receiverIdGenerator = SequentialUUIDGenerator();
 
   bool active = false;
   Timer? heartbeatTimer;
@@ -28,25 +29,37 @@ class RemitSender {
 
   Future<void> makeConnection(final RemitReceiverBasicInfo receiverInfo) async {
     // TODO: defer user confirmation
-    final String senderToken = UUID.generateToken();
-    final RemitSenderConnection conn = RemitSenderConnection(
+    final String receiverToken = UUID.generateToken();
+    final RemitSenderConnection connection = RemitSenderConnection(
       receiver: receiverInfo,
-      token: senderToken,
+      token: receiverToken,
       connectedAt: DateTime.now().millisecondsSinceEpoch,
     );
-    final bool accepted = await conn.connectionAccepted();
+    final bool accepted = await connection.connectionAccepted();
     if (accepted) {
-      addConnection(conn);
+      final int receiverId = receiverIdGenerator.next();
+      connections[receiverId] = connection;
+      tokens[receiverToken] = receiverId;
     }
   }
 
-  void addConnection(final RemitSenderConnection connection) {
-    final int senderId = senderIdGenerator.next();
-    connections[senderId] = connection;
+  Future<void> removeConnection(final int receiverId) async {
+    final RemitSenderConnection? connection = connections.remove(receiverId);
+    if (connection == null) return;
+    tokens.remove(connection.token);
+    await connection.disconnect();
   }
 
-  Future<void> removeConnection(final int senderId) async {
-    connections.remove(senderId);
+  Future<SecureKey?> generateSecret(final int receiverId) async {
+    final RemitSenderConnection? connection = connections[receiverId];
+    if (connection == null) return null;
+    if (connection.secretKey != null) {
+      removeConnection(receiverId);
+      return null;
+    }
+    final SecureKey secureKey = SecureKey.generate32bits();
+    connection.secretKey = secureKey;
+    return secureKey;
   }
 
   void startHeartbeat() {
@@ -68,8 +81,8 @@ class RemitSender {
   Future<void> destroy() async {
     heartbeatTimer?.cancel();
     await server.destroy();
-    for (final int senderId in connections.keys) {
-      await removeConnection(senderId);
+    for (final int receiverId in connections.keys) {
+      await removeConnection(receiverId);
     }
   }
 

@@ -6,10 +6,19 @@ class RemitSenderServerPingRoute extends RemitSenderServerRoute {
   void use(final RemitSender sender) {
     sender.server.app.post(
       path,
-      (final shelf.Request req) => shelf.Response.ok(
-        RemitJsonBody.construct(true),
-        headers: RemitHttpHeaders.construct(),
-      ),
+      (final shelf.Request req) {
+        final String? receiverToken = req.headers[RemitHeaderKeys.token];
+        if (!sender.tokens.containsKey(receiverToken)) {
+          return shelf.Response.unauthorized(
+            RemitJsonBody.construct(false),
+            headers: RemitHttpHeaders.construct(),
+          );
+        }
+        return shelf.Response.ok(
+          RemitJsonBody.construct(true),
+          headers: RemitHttpHeaders.construct(),
+        );
+      },
     );
   }
 

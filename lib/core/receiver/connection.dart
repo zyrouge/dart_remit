@@ -9,14 +9,23 @@ class RemitReceiverConnection {
 
   final RemitSenderBasicInfo sender;
   final int connectedAt;
+
   int lastHeartbeatAt;
+  String? identifier;
+  String? token;
 
   Future<bool> ping() async {
+    if (token == null) return false;
     try {
       final http.Response resp = await http
           .post(
             constructSenderUri(RemitSenderServerPingRoute.path),
-            headers: RemitHttpHeaders.construct(contentType: null),
+            headers: RemitHttpHeaders.construct(
+              contentType: null,
+              additional: <String, String>{
+                RemitHeaderKeys.token: token ?? '',
+              },
+            ),
           )
           .timeout(RemitHttpDefaults.requestTimeout);
       return resp.statusCode == 200;
@@ -42,7 +51,12 @@ class RemitReceiverConnection {
       await http
           .post(
             constructSenderUri('/disconnect'),
-            headers: RemitHttpHeaders.construct(contentType: null),
+            headers: RemitHttpHeaders.construct(
+              contentType: null,
+              additional: <String, String>{
+                RemitHeaderKeys.token: token ?? '',
+              },
+            ),
           )
           .timeout(RemitHttpDefaults.requestTimeout);
     } catch (_) {}

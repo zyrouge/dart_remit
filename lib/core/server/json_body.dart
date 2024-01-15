@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-typedef RemitHttpBodyData = (bool, Map<dynamic, dynamic>);
+typedef RemitJsonBodyData = (bool, Map<dynamic, dynamic>);
 
 class RemitJsonBody {
   static const Map<dynamic, dynamic> defaultData = <dynamic, dynamic>{};
@@ -16,7 +16,7 @@ class RemitJsonBody {
     return jsonEncode(output);
   }
 
-  static RemitHttpBodyData? deconstruct(final String body) {
+  static RemitJsonBodyData? deconstruct(final String body) {
     try {
       final Map<dynamic, dynamic> data =
           jsonDecode(body) as Map<dynamic, dynamic>;

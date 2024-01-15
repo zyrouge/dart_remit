@@ -10,8 +10,10 @@ class RemitSenderConnection {
 
   final RemitReceiverBasicInfo receiver;
   final String token;
+
   final int connectedAt;
   int lastHeartbeatAt;
+  SecureKey? secretKey;
 
   Future<bool> ping() async {
     try {
