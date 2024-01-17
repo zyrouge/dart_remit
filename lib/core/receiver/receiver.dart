@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'package:pointycastle/api.dart';
 import 'package:remit/core/errors/exception.dart';
 import 'package:remit/exports.dart';
 
@@ -26,12 +28,32 @@ class RemitReceiver {
     logger.info('RemitReceiver', 'ready');
   }
 
-  void onConnectionAccepted({
+  Future<void> onConnectionAccepted({
     required final String identifier,
     required final String token,
-  }) {
+    required final bool secure,
+  }) async {
     connection.identifier = identifier;
     connection.token = token;
+    connection.secure = secure;
+    if (secure) {
+      logger.info('RemitReceiver', 'fetching secret key');
+      final AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey> keyPair =
+          RSA.generateKeyPair(createFortunaRandom());
+      try {
+        final Uint8List secret =
+            await connection.fetchSecret(keyPair.publicKey);
+        connection.secret = secret;
+        logger.info('RemitReceiver', 'fetched secret key');
+      } catch (error) {
+        logger.error(
+          'RemitReceiver',
+          'fetching secret failed, destroying (err: $error)',
+        );
+        destroy();
+        rethrow;
+      }
+    }
     active = true;
     startHeartbeat();
     logger.info('RemitReceiver', 'connected to sender');
@@ -48,7 +70,7 @@ class RemitReceiver {
       if (!active) return;
       final bool awake = await connection.ping();
       if (!awake) {
-        logger.info('RemitReceiver', 'ping to sender fail');
+        logger.warn('RemitReceiver', 'ping to sender failed, disconnecting...');
         await destroy();
         return;
       }
@@ -70,12 +92,13 @@ class RemitReceiver {
   static final List<RemitReceiverServerRoute> routes =
       <RemitReceiverServerRoute>[
     RemitReceiverServerPingRoute(),
+    RemitReceiverServerConnectionAcceptedRoute(),
   ];
 
-  // TODO: redo this
   static Future<RemitReceiver> create({
     required final RemitReceiverBasicInfo info,
     required final RemitSenderBasicInfo sender,
+    required final String inviteCode,
     required final RemitLogger logger,
   }) async {
     final RemitServer server = await RemitServer.createServer(
@@ -84,6 +107,7 @@ class RemitReceiver {
     );
     final int connectedAt = DateTime.now().millisecondsSinceEpoch;
     final RemitReceiverConnection connection = RemitReceiverConnection(
+      info: info,
       sender: sender,
       connectedAt: connectedAt,
     );
@@ -94,7 +118,7 @@ class RemitReceiver {
       logger: logger,
     );
     await receiver.initialize();
-    final bool requested = await connection.connectionRequest();
+    final bool requested = await connection.connectionRequest(inviteCode);
     if (!requested) {
       await receiver.destroy();
       throw RemitException(

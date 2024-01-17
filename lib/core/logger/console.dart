@@ -1,6 +1,8 @@
 import 'package:remit/core/exports.dart';
 
 class RemitConsoleLogger implements RemitLogger {
+  const RemitConsoleLogger();
+
   @override
   void info(final String tag, final String text) {
     print('INFO $tag: $text');

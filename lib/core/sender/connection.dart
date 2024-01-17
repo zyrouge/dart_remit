@@ -6,12 +6,16 @@ class RemitSenderConnection {
     required this.receiver,
     required this.token,
     required this.connectedAt,
-  }) : lastHeartbeatAt = connectedAt;
+    required this.secure,
+  })  : identifier = UUID.generateIdentifier(),
+        lastHeartbeatAt = connectedAt;
 
   final RemitReceiverBasicInfo receiver;
   final String token;
+  final bool secure;
 
   final int connectedAt;
+  final String identifier;
   int lastHeartbeatAt;
   SecureKey? secretKey;
 
@@ -20,7 +24,12 @@ class RemitSenderConnection {
       final http.Response resp = await http
           .post(
             constructSenderUri(RemitSenderServerPingRoute.path),
-            headers: RemitHttpHeaders.construct(contentType: null),
+            headers: RemitHttpHeaders.construct(
+              contentType: null,
+              additional: <String, String>{
+                RemitHeaderKeys.identifier: identifier,
+              },
+            ),
           )
           .timeout(RemitHttpDefaults.requestTimeout);
       return resp.statusCode == 200;
@@ -35,7 +44,9 @@ class RemitSenderConnection {
             constructSenderUri(RemitReceiverServerConnectionAcceptedRoute.path),
             headers: RemitHttpHeaders.construct(),
             body: jsonEncode(<dynamic, dynamic>{
+              RemitDataKeys.identifier: identifier,
               RemitDataKeys.token: token,
+              RemitDataKeys.secure: secure,
             }),
           )
           .timeout(RemitHttpDefaults.requestTimeout);

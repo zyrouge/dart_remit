@@ -6,7 +6,9 @@ import 'package:pointycastle/asymmetric/rsa.dart';
 import 'package:pointycastle/key_generators/api.dart';
 import 'package:pointycastle/key_generators/rsa_key_generator.dart';
 
-export 'package:pointycastle/asymmetric/api.dart' show RSAPublicKey;
+export 'package:pointycastle/api.dart' show AsymmetricKeyPair;
+export 'package:pointycastle/asymmetric/api.dart'
+    show RSAPrivateKey, RSAPublicKey;
 
 // Source: https://github.com/bcgit/pc-dart/blob/master/tutorials/rsa.md,
 //         https://github.com/leocavalcante/encrypt/blob/5.x/lib/src/algorithms/rsa.dart

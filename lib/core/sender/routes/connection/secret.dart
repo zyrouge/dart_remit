@@ -10,6 +10,12 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
     sender.server.app.post(
       path,
       (final shelf.Request req) async {
+        if (!sender.secure) {
+          return shelf.Response.forbidden(
+            RemitJsonBody.construct(false),
+            headers: RemitHttpHeaders.construct(),
+          );
+        }
         final String? receiverToken = req.headers[RemitHeaderKeys.token];
         final int? receiverId = sender.tokens[receiverToken];
         if (receiverId == null) {

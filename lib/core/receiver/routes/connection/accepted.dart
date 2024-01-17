@@ -10,13 +10,21 @@ class RemitReceiverServerConnectionAcceptedRoute
       final Map<dynamic, dynamic>? data = jsonDecodeMapOrNull(body);
       final String? identifier = mapKeyOrNull(data, RemitDataKeys.identifier);
       final String? token = mapKeyOrNull(data, RemitDataKeys.token);
-      if (data == null || identifier == null || token == null) {
+      final bool? secure = mapKeyOrNull(data, RemitDataKeys.secure);
+      if (data == null ||
+          identifier == null ||
+          token == null ||
+          secure == null) {
         return shelf.Response.badRequest(
           body: RemitJsonBody.construct(false),
           headers: RemitHttpHeaders.construct(),
         );
       }
-      receiver.onConnectionAccepted(identifier: identifier, token: token);
+      receiver.onConnectionAccepted(
+        identifier: identifier,
+        token: token,
+        secure: secure,
+      );
       return shelf.Response.ok(
         RemitJsonBody.construct(true),
         headers: RemitHttpHeaders.construct(),

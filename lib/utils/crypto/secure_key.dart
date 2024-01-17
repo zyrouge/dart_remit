@@ -12,7 +12,7 @@ class SecureKey {
   factory SecureKey.generate(final int length) {
     final Uint8List bytes = Uint8List(length);
     for (int i = 0; i < length; i++) {
-      bytes.add(random.nextInt(256));
+      bytes[i] = random.nextInt(256);
     }
     return SecureKey(bytes);
   }

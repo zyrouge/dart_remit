@@ -9,4 +9,5 @@ class RemitDataKeys {
   static const String secret = 'secret';
   static const String publicKey = 'public_key';
   static const String inviteCode = 'invite_code';
+  static const String secure = 'secure';
 }
