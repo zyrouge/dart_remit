@@ -3,7 +3,6 @@ import 'package:convert/convert.dart';
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
-// TODO: experimental
 class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
   @override
   void use(final RemitSender sender) {
@@ -16,8 +15,7 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
             headers: RemitHttpHeaders.construct(),
           );
         }
-        final String? receiverToken = req.headers[RemitHeaderKeys.token];
-        final int? receiverId = sender.tokens[receiverToken];
+        final int? receiverId = identifyReceiverId(sender, req);
         if (receiverId == null) {
           return shelf.Response.unauthorized(
             RemitJsonBody.fail(),

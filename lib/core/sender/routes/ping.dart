@@ -7,8 +7,7 @@ class RemitSenderServerPingRoute extends RemitSenderServerRoute {
     sender.server.app.post(
       path,
       (final shelf.Request req) {
-        final String? receiverToken = req.headers[RemitHeaderKeys.token];
-        if (!sender.tokens.containsKey(receiverToken)) {
+        if (!isAuthenticated(sender, req)) {
           return shelf.Response.unauthorized(
             RemitJsonBody.fail(),
             headers: RemitHttpHeaders.construct(),
