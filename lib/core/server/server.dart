@@ -18,18 +18,25 @@ class RemitServer {
 
   String get host => http.address.host;
   int get port => http.port;
+  RemitConnectionAddress get address => RemitConnectionAddress(host, port);
 
-  static Future<RemitServer> createServer({
-    required final String host,
-    required final int port,
-  }) async {
+  static Future<RemitServer> createServer(
+    final RemitConnectionAddress address,
+  ) async {
     final shelf_router.Router app = shelf_router.Router();
     final HttpServer http = await shelf_io.serve(
       app.call,
-      host,
-      port,
+      address.host,
+      address.port,
       poweredByHeader: RemitHttpHeaders.userAgent,
     );
     return RemitServer._(app: app, http: http);
+  }
+
+  static Future<List<InternetAddress>> getAvailableNetworks() async {
+    final List<NetworkInterface> networks = await NetworkInterface.list(
+      type: InternetAddressType.IPv4,
+    );
+    return networks.expand((final NetworkInterface x) => x.addresses).toList();
   }
 }

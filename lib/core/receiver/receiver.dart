@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:pointycastle/api.dart';
 import 'package:remit/core/errors/exception.dart';
 import 'package:remit/exports.dart';
 
@@ -25,7 +24,7 @@ class RemitReceiver {
     for (final RemitReceiverServerRoute route in routes) {
       route.use(this);
     }
-    logger.info('RemitReceiver', 'ready');
+    logger.info('RemitReceiver', 'ready (server at ${server.address})');
   }
 
   Future<void> onConnectionAccepted({
@@ -56,12 +55,12 @@ class RemitReceiver {
     }
     active = true;
     startHeartbeat();
-    logger.info('RemitReceiver', 'connected to sender');
+    logger.info('RemitReceiver', 'connected to ${connection.debugUsername}');
   }
 
   void onSenderDisconnected() {
     destroy();
-    logger.info('RemitReceiver', 'sender disconnected');
+    logger.info('RemitReceiver', '${connection.debugUsername} disconnected');
   }
 
   void startHeartbeat() {
@@ -70,12 +69,18 @@ class RemitReceiver {
       if (!active) return;
       final bool awake = await connection.ping();
       if (!awake) {
-        logger.warn('RemitReceiver', 'ping to sender failed, disconnecting...');
+        logger.warn(
+          'RemitReceiver',
+          'ping to ${connection.debugUsername} failed, disconnecting...',
+        );
         await destroy();
         return;
       }
       connection.lastHeartbeatAt = DateTime.now().millisecondsSinceEpoch;
-      logger.info('RemitReceiver', 'ping to sender passed');
+      logger.info(
+        'RemitReceiver',
+        'ping to ${connection.debugUsername} passed',
+      );
     });
   }
 
@@ -97,18 +102,20 @@ class RemitReceiver {
 
   static Future<RemitReceiver> create({
     required final RemitReceiverBasicInfo info,
-    required final RemitSenderBasicInfo sender,
+    required final RemitConnectionAddress address,
+    required final RemitConnectionAddress senderAddress,
     required final String inviteCode,
     required final RemitLogger logger,
   }) async {
-    final RemitServer server = await RemitServer.createServer(
-      host: info.host,
-      port: info.port,
-    );
+    final RemitSenderBasicInfo senderInfo =
+        await RemitReceiverConnection.fetchSenderInfo(senderAddress);
+    final RemitServer server = await RemitServer.createServer(address);
     final int connectedAt = DateTime.now().millisecondsSinceEpoch;
     final RemitReceiverConnection connection = RemitReceiverConnection(
       info: info,
-      sender: sender,
+      address: server.address,
+      senderInfo: senderInfo,
+      senderAddress: senderAddress,
       connectedAt: connectedAt,
     );
     final RemitReceiver receiver = RemitReceiver._(

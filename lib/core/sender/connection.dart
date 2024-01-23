@@ -3,14 +3,16 @@ import 'package:remit/exports.dart';
 
 class RemitSenderConnection {
   RemitSenderConnection({
-    required this.receiver,
+    required this.receiverInfo,
+    required this.receiverAddress,
     required this.token,
     required this.connectedAt,
     required this.secure,
   })  : identifier = UUID.generateIdentifier(),
         lastHeartbeatAt = connectedAt;
 
-  final RemitReceiverBasicInfo receiver;
+  final RemitReceiverBasicInfo receiverInfo;
+  final RemitConnectionAddress receiverAddress;
   final String token;
   final bool secure;
 
@@ -23,7 +25,7 @@ class RemitSenderConnection {
     try {
       final http.Response resp = await http
           .post(
-            constructSenderUri(RemitSenderServerPingRoute.path),
+            buildReceiverUri(RemitSenderServerPingRoute.path),
             headers: RemitHttpHeaders.construct(
               contentType: null,
               additional: <String, String>{
@@ -41,7 +43,7 @@ class RemitSenderConnection {
     try {
       final http.Response resp = await http
           .post(
-            constructSenderUri(RemitReceiverServerConnectionAcceptedRoute.path),
+            buildReceiverUri(RemitReceiverServerConnectionAcceptedRoute.path),
             headers: RemitHttpHeaders.construct(),
             body: jsonEncode(<dynamic, dynamic>{
               RemitDataKeys.identifier: identifier,
@@ -59,17 +61,16 @@ class RemitSenderConnection {
     try {
       await http
           .post(
-            constructSenderUri('/disconnect'),
+            buildReceiverUri('/disconnect'),
             headers: RemitHttpHeaders.construct(contentType: null),
           )
           .timeout(RemitHttpDefaults.requestTimeout);
     } catch (_) {}
   }
 
-  Uri constructSenderUri(final String path) => Uri(
-        scheme: 'http',
-        host: receiver.host,
-        port: receiver.port,
-        path: path,
-      );
+  Uri buildReceiverUri(final String path) =>
+      receiverAddress.appendPathUri(path);
+
+  String get debugUsername =>
+      'u:sndr:${receiverInfo.username}:$receiverAddress';
 }

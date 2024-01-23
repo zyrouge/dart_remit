@@ -16,7 +16,7 @@ class RemitReceiverServerConnectionAcceptedRoute
           token == null ||
           secure == null) {
         return shelf.Response.badRequest(
-          body: RemitJsonBody.construct(false),
+          body: RemitJsonBody.fail(),
           headers: RemitHttpHeaders.construct(),
         );
       }
@@ -26,7 +26,7 @@ class RemitReceiverServerConnectionAcceptedRoute
         secure: secure,
       );
       return shelf.Response.ok(
-        RemitJsonBody.construct(true),
+        RemitJsonBody.success(),
         headers: RemitHttpHeaders.construct(),
       );
     });

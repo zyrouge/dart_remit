@@ -6,13 +6,17 @@ import 'package:remit/exports.dart';
 
 class RemitReceiverConnection {
   RemitReceiverConnection({
-    required this.sender,
     required this.info,
+    required this.address,
+    required this.senderInfo,
+    required this.senderAddress,
     required this.connectedAt,
   }) : lastHeartbeatAt = connectedAt;
 
-  final RemitSenderBasicInfo sender;
   final RemitReceiverBasicInfo info;
+  final RemitConnectionAddress address;
+  final RemitSenderBasicInfo senderInfo;
+  final RemitConnectionAddress senderAddress;
   final int connectedAt;
 
   int lastHeartbeatAt;
@@ -26,7 +30,7 @@ class RemitReceiverConnection {
     try {
       final http.Response resp = await http
           .post(
-            constructSenderUri(RemitSenderServerPingRoute.path),
+            buildSenderUri(RemitSenderServerPingRoute.path),
             headers: RemitHttpHeaders.construct(
               contentType: null,
               additional: <String, String>{
@@ -44,10 +48,11 @@ class RemitReceiverConnection {
     try {
       final http.Response resp = await http
           .post(
-            constructSenderUri(RemitSenderServerConnectionRequestRoute.path),
+            buildSenderUri(RemitSenderServerConnectionRequestRoute.path),
             headers: RemitHttpHeaders.construct(),
             body: jsonEncode(<dynamic, dynamic>{
               RemitDataKeys.info: info.toJson(),
+              RemitDataKeys.connectionAddress: address.toJson(),
               RemitDataKeys.inviteCode: inviteCode,
             }),
           )
@@ -61,7 +66,7 @@ class RemitReceiverConnection {
     try {
       final http.Response resp = await http
           .post(
-            constructSenderUri(RemitSenderServerSecretRoute.path),
+            buildSenderUri(RemitSenderServerSecretRoute.path),
             headers: RemitHttpHeaders.construct(
               additional: <String, String>{
                 RemitHeaderKeys.token: token ?? '',
@@ -112,7 +117,7 @@ class RemitReceiverConnection {
     try {
       await http
           .post(
-            constructSenderUri('/disconnect'),
+            buildSenderUri('/disconnect'),
             headers: RemitHttpHeaders.construct(
               contentType: null,
               additional: <String, String>{
@@ -124,10 +129,42 @@ class RemitReceiverConnection {
     } catch (_) {}
   }
 
-  Uri constructSenderUri(final String path) => Uri(
-        scheme: 'http',
-        host: sender.host,
-        port: sender.port,
-        path: path,
+  Uri buildSenderUri(final String path) => senderAddress.appendPathUri(path);
+
+  String get debugUsername => 'u:rcvr:${senderInfo.username}:$senderAddress';
+
+  static Future<RemitSenderBasicInfo> fetchSenderInfo(
+    final RemitConnectionAddress address,
+  ) async {
+    final http.Response resp = await http
+        .post(
+          address.appendPathUri(RemitSenderServerInfoRoute.path),
+          headers: RemitHttpHeaders.construct(contentType: null),
+        )
+        .timeout(RemitHttpDefaults.requestTimeout);
+    if (resp.statusCode != 200) {
+      throw RemitException(
+        'Fetching sender info returned ${resp.statusCode} status code',
+        code: RemitErrorCodes.unexpectedResponse,
       );
+    }
+    final RemitJsonBodyData? data = RemitJsonBody.deconstruct(resp.body);
+    if (data == null || !data.success) {
+      throw RemitException(
+        'Received non-success response',
+        code: RemitErrorCodes.unexpectedResponse,
+      );
+    }
+    final RemitSenderBasicInfo? info = jsonFactoryOrNull(
+      data.data,
+      RemitSenderBasicInfo.fromJson,
+    );
+    if (info == null) {
+      throw RemitException(
+        'Received invalid data',
+        code: RemitErrorCodes.invalidData,
+      );
+    }
+    return info;
+  }
 }

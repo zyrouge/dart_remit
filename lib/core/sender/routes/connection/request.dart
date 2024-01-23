@@ -12,22 +12,32 @@ class RemitSenderServerConnectionRequestRoute extends RemitSenderServerRoute {
         RemitDataKeys.info,
         RemitReceiverBasicInfo.fromJson,
       );
+      final RemitConnectionAddress? receiverAddress = mapKeyFactoryOrNull(
+        data,
+        RemitDataKeys.connectionAddress,
+        RemitConnectionAddress.fromJson,
+      );
       final String? inviteCode = mapKeyOrNull(data, RemitDataKeys.inviteCode);
-      if (receiverInfo == null || inviteCode == null) {
+      if (receiverInfo == null ||
+          receiverAddress == null ||
+          inviteCode == null) {
         return shelf.Response.badRequest(
-          body: RemitJsonBody.construct(false),
+          body: RemitJsonBody.fail(),
           headers: RemitHttpHeaders.construct(),
         );
       }
       if (inviteCode != sender.inviteCode) {
         return shelf.Response.unauthorized(
-          RemitJsonBody.construct(false),
+          RemitJsonBody.fail(),
           headers: RemitHttpHeaders.construct(),
         );
       }
-      sender.makeConnection(receiverInfo);
+      sender.makeConnection(
+        receiverInfo: receiverInfo,
+        receiverAddress: receiverAddress,
+      );
       return shelf.Response.ok(
-        RemitJsonBody.construct(true),
+        RemitJsonBody.fail(),
         headers: RemitHttpHeaders.construct(),
       );
     });

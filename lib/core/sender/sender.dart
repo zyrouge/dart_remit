@@ -29,34 +29,38 @@ class RemitSender {
     }
     active = true;
     startHeartbeat();
-    logger.info('RemitSender', 'ready');
+    logger.info('RemitSender', 'ready (server at ${server.address})');
   }
 
-  Future<void> makeConnection(final RemitReceiverBasicInfo receiverInfo) async {
+  Future<void> makeConnection({
+    required final RemitReceiverBasicInfo receiverInfo,
+    required final RemitConnectionAddress receiverAddress,
+  }) async {
     // TODO: defer user confirmation
     final String receiverToken = UUID.generateToken();
     final RemitSenderConnection connection = RemitSenderConnection(
-      receiver: receiverInfo,
+      receiverInfo: receiverInfo,
+      receiverAddress: receiverAddress,
       token: receiverToken,
       secure: secure,
       connectedAt: DateTime.now().millisecondsSinceEpoch,
     );
     logger.info(
       'RemitSender',
-      'establishing connecting with uname:${receiverInfo.username} host:${receiverInfo.host} port:${receiverInfo.port}',
+      'establishing connection with ${connection.debugUsername}',
     );
     final bool accepted = await connection.connectionAccepted();
     if (!accepted) {
       logger.warn(
         'RemitSender',
-        'connection rejected by uname:${receiverInfo.username}',
+        'connection rejected by ${connection.debugUsername}',
       );
       return;
     }
     final int receiverId = receiverIdGenerator.next();
     connections[receiverId] = connection;
     tokens[receiverToken] = receiverId;
-    logger.info('RemitSender', 'connected with uname:${receiverInfo.username}');
+    logger.info('RemitSender', 'connected with ${connection.debugUsername}');
   }
 
   Future<void> removeConnection(final int receiverId) async {
@@ -64,13 +68,13 @@ class RemitSender {
     if (connection == null) return;
     logger.info(
       'RemitSender',
-      'disconnecting from uname:${connection.receiver.username}',
+      'disconnecting from ${connection.debugUsername}',
     );
     tokens.remove(connection.token);
     await connection.disconnect();
     logger.info(
       'RemitSender',
-      'disconnected from uname:${connection.receiver.username}',
+      'disconnected from ${connection.debugUsername}',
     );
   }
 
@@ -89,7 +93,7 @@ class RemitSender {
     connection.secretKey = secureKey;
     logger.info(
       'RemitSender',
-      'secret set for uname:${connection.receiver.username}',
+      'secret set for ${connection.debugUsername}',
     );
     return secureKey;
   }
@@ -104,7 +108,7 @@ class RemitSender {
         if (!awake) {
           logger.warn(
             'RemitSender',
-            'ping to uname:${x.value.receiver.username} failed, disconnecting...',
+            'ping to ${x.value.debugUsername} failed, disconnecting...',
           );
           await removeConnection(x.key);
           return;
@@ -112,7 +116,7 @@ class RemitSender {
         x.value.lastHeartbeatAt = DateTime.now().millisecondsSinceEpoch;
         logger.info(
           'RemitSender',
-          'ping to uname:${x.value.receiver.username} passed',
+          'ping to ${x.value.debugUsername} passed',
         );
       }
     });
@@ -130,17 +134,16 @@ class RemitSender {
     RemitSenderServerPingRoute(),
     RemitSenderServerConnectionRequestRoute(),
     RemitSenderServerSecretRoute(),
+    RemitSenderServerInfoRoute(),
   ];
 
   static Future<RemitSender> create({
     required final RemitSenderBasicInfo info,
+    required final RemitConnectionAddress address,
     required final bool secure,
     required final RemitLogger logger,
   }) async {
-    final RemitServer server = await RemitServer.createServer(
-      host: info.host,
-      port: info.port,
-    );
+    final RemitServer server = await RemitServer.createServer(address);
     final RemitSender master = RemitSender._(
       info: info,
       server: server,

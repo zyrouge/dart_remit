@@ -15,6 +15,17 @@ Map<dynamic, dynamic>? jsonDecodeMapOrNull(final String source) {
   return null;
 }
 
+V? jsonFactoryOrNull<U, V>(
+  final Map<dynamic, dynamic>? map,
+  final V Function(U) factoryFn,
+) {
+  if (map == null) return null;
+  try {
+    return factoryFn(map as U);
+  } catch (_) {}
+  return null;
+}
+
 T? mapKeyOrNull<T>(final Map<dynamic, dynamic>? map, final dynamic key) {
   if (map == null) return null;
   try {

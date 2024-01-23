@@ -11,12 +11,12 @@ class RemitReceiverServerPingRoute extends RemitReceiverServerRoute {
             req.headers[RemitHeaderKeys.identifier];
         if (receiver.connection.identifier != senderIdentifier) {
           return shelf.Response.unauthorized(
-            RemitJsonBody.construct(false),
+            RemitJsonBody.fail(),
             headers: RemitHttpHeaders.construct(),
           );
         }
         return shelf.Response.ok(
-          RemitJsonBody.construct(true),
+          RemitJsonBody.success(),
           headers: RemitHttpHeaders.construct(),
         );
       },

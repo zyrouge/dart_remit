@@ -12,7 +12,7 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
       (final shelf.Request req) async {
         if (!sender.secure) {
           return shelf.Response.forbidden(
-            RemitJsonBody.construct(false),
+            RemitJsonBody.fail(),
             headers: RemitHttpHeaders.construct(),
           );
         }
@@ -20,7 +20,7 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
         final int? receiverId = sender.tokens[receiverToken];
         if (receiverId == null) {
           return shelf.Response.unauthorized(
-            RemitJsonBody.construct(false),
+            RemitJsonBody.fail(),
             headers: RemitHttpHeaders.construct(),
           );
         }
@@ -39,14 +39,14 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
         );
         if (publicKey == null) {
           return shelf.Response.badRequest(
-            body: RemitJsonBody.construct(false),
+            body: RemitJsonBody.fail(),
             headers: RemitHttpHeaders.construct(),
           );
         }
         final SecureKey? secret = await sender.generateSecret(receiverId);
         if (secret == null) {
           return shelf.Response.badRequest(
-            body: RemitJsonBody.construct(false),
+            body: RemitJsonBody.fail(),
             headers: RemitHttpHeaders.construct(),
           );
         }
@@ -55,7 +55,7 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
           publicKey: RSAPublicKey(publicKey.$1, publicKey.$2),
         );
         return shelf.Response.ok(
-          RemitJsonBody.construct(true, <dynamic, dynamic>{
+          RemitJsonBody.success(<dynamic, dynamic>{
             RemitDataKeys.secret: hex.encode(encryptedSecret),
           }),
           headers: RemitHttpHeaders.construct(),

@@ -2,6 +2,9 @@ class RemitDataKeys {
   static const String success = 'success';
   static const String identifier = 'identifier';
   static const String username = 'username';
+  static const String device = 'device';
+  static const String connectionAddress = 'connection_address';
+  static const String scheme = 'scheme';
   static const String host = 'host';
   static const String port = 'port';
   static const String info = 'info';
