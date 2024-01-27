@@ -5,8 +5,8 @@ class RemitReceiverServerConnectionAcceptedRoute
     extends RemitReceiverServerRoute {
   @override
   void use(final RemitReceiver receiver) {
-    receiver.server.app.post(path, (final shelf.Request req) async {
-      final String body = await req.readAsString();
+    receiver.server.app.post(path, (final shelf.Request request) async {
+      final String body = await request.readAsString();
       final Map<dynamic, dynamic>? data = jsonDecodeMapOrNull(body);
       final String? identifier = mapKeyOrNull(data, RemitDataKeys.identifier);
       final String? token = mapKeyOrNull(data, RemitDataKeys.token);
@@ -16,7 +16,7 @@ class RemitReceiverServerConnectionAcceptedRoute
           token == null ||
           secure == null) {
         return shelf.Response.badRequest(
-          body: RemitJsonBody.fail(),
+          body: RemitDataBody.failure(),
           headers: RemitHttpHeaders.construct(),
         );
       }
@@ -26,7 +26,7 @@ class RemitReceiverServerConnectionAcceptedRoute
         secure: secure,
       );
       return shelf.Response.ok(
-        RemitJsonBody.success(),
+        RemitDataBody.successful(),
         headers: RemitHttpHeaders.construct(),
       );
     });

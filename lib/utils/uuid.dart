@@ -18,6 +18,20 @@ abstract class UUID {
   static String generateIdentifier() => generate(32);
   static String generateToken() => generate(128);
   static String generateInviteCode() => generate(6);
+  static String generateLongIdentifier() => fromDateTime() + generate(48);
+
+  static String fromNumber(final int value) {
+    final StringBuffer buffer = StringBuffer();
+    int i = value;
+    while (i > 0) {
+      buffer.write(symbols[i % 10]);
+      i ~/= 10;
+    }
+    return buffer.toString();
+  }
+
+  static String fromDateTime([final DateTime? time]) =>
+      fromNumber((time ?? DateTime.now()).millisecondsSinceEpoch);
 }
 
 class SequentialUUIDGenerator {

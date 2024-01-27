@@ -4,5 +4,7 @@ abstract class RemitErrorCodes {
   static const String unexpectedResponse = 'UNEXPECTED_RESPONSE';
   static const String unexpectedError = 'UNEXPECTED_ERROR';
   static const String connectionReject = 'CONNECTION_REJECT';
+  static const String unsupportedOperation = 'UNSUPPORTED_OPERATION';
+  static const String invalidState = 'INVALID_STATE';
   static const String unknown = 'UNKNOWN';
 }

@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:convert/convert.dart';
 import 'package:http/http.dart' as http;
-import 'package:remit/core/errors/exception.dart';
 import 'package:remit/exports.dart';
 
 class RemitReceiverConnection {
@@ -83,14 +82,14 @@ class RemitReceiverConnection {
       if (resp.statusCode != 200) {
         throw RemitException(
           'Fetching secret returned ${resp.statusCode} status code',
-          code: RemitErrorCodes.unexpectedResponse,
+          code: RemitErrorCode.unexpectedResponse,
         );
       }
-      final RemitJsonBodyData? data = RemitJsonBody.deconstruct(resp.body);
+      final RemitJsonDataBody? data = RemitDataBody.deconstruct(resp.body);
       if (data == null || !data.success) {
         throw RemitException(
           'Received non-success response',
-          code: RemitErrorCodes.unexpectedResponse,
+          code: RemitErrorCode.unexpectedResponse,
         );
       }
       final List<int>? encryptedSecretBytes = mapKeyFactoryOrNull(
@@ -101,14 +100,14 @@ class RemitReceiverConnection {
       if (encryptedSecretBytes == null) {
         throw RemitException(
           'Invalid secret received',
-          code: RemitErrorCodes.invalidData,
+          code: RemitErrorCode.invalidData,
         );
       }
       return Uint8List.fromList(encryptedSecretBytes);
     } catch (error) {
       throw RemitException(
         error.toString(),
-        code: RemitErrorCodes.unexpectedError,
+        code: RemitErrorCode.unexpectedError,
       );
     }
   }
@@ -131,7 +130,7 @@ class RemitReceiverConnection {
 
   Uri buildSenderUri(final String path) => senderAddress.appendPathUri(path);
 
-  String get debugUsername => 'u:rcvr:${senderInfo.username}:$senderAddress';
+  String get debugUsername => 'u/rcvr/${senderInfo.username}/$senderAddress';
 
   static Future<RemitSenderBasicInfo> fetchSenderInfo(
     final RemitConnectionAddress address,
@@ -145,14 +144,14 @@ class RemitReceiverConnection {
     if (resp.statusCode != 200) {
       throw RemitException(
         'Fetching sender info returned ${resp.statusCode} status code',
-        code: RemitErrorCodes.unexpectedResponse,
+        code: RemitErrorCode.unexpectedResponse,
       );
     }
-    final RemitJsonBodyData? data = RemitJsonBody.deconstruct(resp.body);
+    final RemitJsonDataBody? data = RemitDataBody.deconstruct(resp.body);
     if (data == null || !data.success) {
       throw RemitException(
         'Received non-success response',
-        code: RemitErrorCodes.unexpectedResponse,
+        code: RemitErrorCode.unexpectedResponse,
       );
     }
     final RemitSenderBasicInfo? info = jsonFactoryOrNull(
@@ -162,7 +161,7 @@ class RemitReceiverConnection {
     if (info == null) {
       throw RemitException(
         'Received invalid data',
-        code: RemitErrorCodes.invalidData,
+        code: RemitErrorCode.invalidData,
       );
     }
     return info;

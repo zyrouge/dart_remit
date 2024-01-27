@@ -13,4 +13,6 @@ class RemitDataKeys {
   static const String publicKey = 'public_key';
   static const String inviteCode = 'invite_code';
   static const String secure = 'secure';
+  static const String path = 'path';
+  static const String entities = 'entities';
 }

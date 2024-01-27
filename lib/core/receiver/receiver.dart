@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:remit/core/errors/exception.dart';
 import 'package:remit/exports.dart';
 
 class RemitReceiver {
@@ -61,6 +60,40 @@ class RemitReceiver {
   void onSenderDisconnected() {
     destroy();
     logger.info('RemitReceiver', '${connection.debugUsername} disconnected');
+  }
+
+  dynamic maybeEncryptJson({
+    required final RemitSenderConnection connection,
+    required final Map<dynamic, dynamic> data,
+  }) {
+    if (connection.secure) {
+      if (connection.secretKey == null) {
+        throw RemitException(
+          'Cannot encrypt without secret key',
+          code: RemitErrorCodes.invalidState,
+        );
+      }
+      return RemitDataEncrypter.encryptJson(
+        data: data,
+        key: connection.secretKey!,
+      );
+    }
+    return data;
+  }
+
+  Map<dynamic, dynamic>? maybeDecryptJsonOrNull({
+    required final RemitSenderConnection connection,
+    required final dynamic data,
+  }) {
+    if (connection.secure) {
+      if (data is! String) return null;
+      return RemitDataEncrypter.decryptJson(
+        data: data,
+        key: connection.secretKey!,
+      );
+    }
+    if (data is! Map<dynamic, dynamic>) return null;
+    return data;
   }
 
   void startHeartbeat() {

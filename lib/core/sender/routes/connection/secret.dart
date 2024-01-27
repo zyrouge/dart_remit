@@ -8,21 +8,21 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
   void use(final RemitSender sender) {
     sender.server.app.post(
       path,
-      (final shelf.Request req) async {
+      (final shelf.Request request) async {
         if (!sender.secure) {
           return shelf.Response.forbidden(
-            RemitJsonBody.fail(),
+            RemitDataBody.failure(),
             headers: RemitHttpHeaders.construct(),
           );
         }
-        final int? receiverId = identifyReceiverId(sender, req);
+        final int? receiverId = identifyConnectionId(sender, request);
         if (receiverId == null) {
           return shelf.Response.unauthorized(
-            RemitJsonBody.fail(),
+            RemitDataBody.failure(),
             headers: RemitHttpHeaders.construct(),
           );
         }
-        final String body = await req.readAsString();
+        final String body = await request.readAsString();
         final Map<dynamic, dynamic>? data = jsonDecodeMapOrNull(body);
         final (BigInt, BigInt)? publicKey = mapKeyFactoryOrNull(
           data,
@@ -37,23 +37,23 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
         );
         if (publicKey == null) {
           return shelf.Response.badRequest(
-            body: RemitJsonBody.fail(),
+            body: RemitDataBody.failure(),
             headers: RemitHttpHeaders.construct(),
           );
         }
-        final SecureKey? secret = await sender.generateSecret(receiverId);
+        final Uint8List? secret = await sender.generateSecret(receiverId);
         if (secret == null) {
           return shelf.Response.badRequest(
-            body: RemitJsonBody.fail(),
+            body: RemitDataBody.failure(),
             headers: RemitHttpHeaders.construct(),
           );
         }
         final Uint8List encryptedSecret = RSA.encrypt(
-          data: secret.bytes,
+          data: secret,
           publicKey: RSAPublicKey(publicKey.$1, publicKey.$2),
         );
         return shelf.Response.ok(
-          RemitJsonBody.success(<dynamic, dynamic>{
+          RemitDataBody.successful(<dynamic, dynamic>{
             RemitDataKeys.secret: hex.encode(encryptedSecret),
           }),
           headers: RemitHttpHeaders.construct(),

@@ -4,8 +4,8 @@ import 'package:shelf/shelf.dart' as shelf;
 class RemitSenderServerConnectionRequestRoute extends RemitSenderServerRoute {
   @override
   void use(final RemitSender sender) {
-    sender.server.app.post(path, (final shelf.Request req) async {
-      final String body = await req.readAsString();
+    sender.server.app.post(path, (final shelf.Request request) async {
+      final String body = await request.readAsString();
       final Map<dynamic, dynamic>? data = jsonDecodeMapOrNull(body);
       final RemitReceiverBasicInfo? receiverInfo = mapKeyFactoryOrNull(
         data,
@@ -22,13 +22,13 @@ class RemitSenderServerConnectionRequestRoute extends RemitSenderServerRoute {
           receiverAddress == null ||
           inviteCode == null) {
         return shelf.Response.badRequest(
-          body: RemitJsonBody.fail(),
+          body: RemitDataBody.failure(),
           headers: RemitHttpHeaders.construct(),
         );
       }
       if (inviteCode != sender.inviteCode) {
         return shelf.Response.unauthorized(
-          RemitJsonBody.fail(),
+          RemitDataBody.failure(),
           headers: RemitHttpHeaders.construct(),
         );
       }
@@ -37,7 +37,7 @@ class RemitSenderServerConnectionRequestRoute extends RemitSenderServerRoute {
         receiverAddress: receiverAddress,
       );
       return shelf.Response.ok(
-        RemitJsonBody.fail(),
+        RemitDataBody.failure(),
         headers: RemitHttpHeaders.construct(),
       );
     });

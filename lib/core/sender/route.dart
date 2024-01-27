@@ -6,17 +6,25 @@ abstract class RemitSenderServerRoute {
 
   bool isAuthenticated(
     final RemitSender sender,
-    final shelf.Request req,
+    final shelf.Request request,
   ) {
-    final String? receiverToken = req.headers[RemitHeaderKeys.token];
+    final String? receiverToken = request.headers[RemitHeaderKeys.token];
     return sender.tokens.containsKey(receiverToken);
   }
 
-  int? identifyReceiverId(
+  int? identifyConnectionId(
     final RemitSender sender,
-    final shelf.Request req,
+    final shelf.Request request,
   ) {
-    final String? receiverToken = req.headers[RemitHeaderKeys.token];
+    final String? receiverToken = request.headers[RemitHeaderKeys.token];
     return sender.tokens[receiverToken];
+  }
+
+  RemitSenderConnection? identifyConnection(
+    final RemitSender sender,
+    final shelf.Request request,
+  ) {
+    final int? receiverId = identifyConnectionId(sender, request);
+    return sender.connections[receiverId];
   }
 }

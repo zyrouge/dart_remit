@@ -6,9 +6,10 @@ abstract class RemitReceiverServerRoute {
 
   bool isAuthenticated(
     final RemitReceiver receiver,
-    final shelf.Request req,
+    final shelf.Request request,
   ) {
-    final String? senderIdentifier = req.headers[RemitHeaderKeys.identifier];
+    final String? senderIdentifier =
+        request.headers[RemitHeaderKeys.identifier];
     return receiver.connection.identifier == senderIdentifier;
   }
 }

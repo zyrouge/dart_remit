@@ -7,8 +7,8 @@ class RemitReceiverServerInfoRoute extends RemitReceiverServerRoute {
   void use(final RemitReceiver receiver) {
     receiver.server.app.post(
       path,
-      (final shelf.Request req) => shelf.Response.ok(
-        RemitJsonBody.success(receiver.info.toJson()),
+      (final shelf.Request request) => shelf.Response.ok(
+        RemitDataBody.successful(receiver.info.toJson()),
         headers: RemitHttpHeaders.construct(),
       ),
     );

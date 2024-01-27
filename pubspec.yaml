@@ -4,11 +4,13 @@ version: 0.0.0
 publish_to: none
 
 environment:
-    sdk: ">=3.0.0 <4.0.0"
+    sdk: ">=3.2.0 <4.0.0"
 
 dependencies:
     convert: ^3.1.1
     http: ^1.1.0
+    meta: ^1.11.0
+    path: ^1.9.0
     pointycastle: ^3.7.3
     shelf: ^1.4.1
     shelf_router: ^1.1.4

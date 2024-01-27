@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:remit/exports.dart';
 
 class RemitSender {
@@ -19,6 +20,10 @@ class RemitSender {
       <int, RemitSenderConnection>{};
   final Map<String, int> tokens = <String, int>{};
   final SequentialUUIDGenerator receiverIdGenerator = SequentialUUIDGenerator();
+  final RemitVirtualFolder filesystem = RemitVirtualFolder(
+    basename: '/',
+    entities: <String, RemitFile>{},
+  );
 
   bool active = false;
   Timer? heartbeatTimer;
@@ -72,13 +77,10 @@ class RemitSender {
     );
     tokens.remove(connection.token);
     await connection.disconnect();
-    logger.info(
-      'RemitSender',
-      'disconnected from ${connection.debugUsername}',
-    );
+    logger.info('RemitSender', 'disconnected from ${connection.debugUsername}');
   }
 
-  Future<SecureKey?> generateSecret(final int receiverId) async {
+  Future<Uint8List?> generateSecret(final int receiverId) async {
     final RemitSenderConnection? connection = connections[receiverId];
     if (connection == null) return null;
     if (connection.secretKey != null) {
@@ -89,13 +91,96 @@ class RemitSender {
       removeConnection(receiverId);
       return null;
     }
-    final SecureKey secureKey = SecureKey.generate32bits();
+    final Uint8List secureKey = SecureKey.generate32bits();
     connection.secretKey = secureKey;
-    logger.info(
-      'RemitSender',
-      'secret set for ${connection.debugUsername}',
-    );
+    logger.info('RemitSender', 'secret set for ${connection.debugUsername}');
     return secureKey;
+  }
+
+  void updateFilesystem(final void Function(RemitVirtualFolder root) updater) {
+    // TODO: emit fs update event
+    updater(filesystem);
+    logger.info('RemitReceiver', 'updated filesystem');
+  }
+
+  dynamic maybeEncryptJson({
+    required final RemitSenderConnection connection,
+    required final Map<dynamic, dynamic> data,
+  }) {
+    if (secure) {
+      final Uint8List? key = connection.secretKey;
+      if (key == null) {
+        throw RemitException(
+          'Cannot encrypt without secret key',
+          code: RemitErrorCodes.invalidState,
+        );
+      }
+      return RemitDataEncrypter.encryptJson(data: data, key: key);
+    }
+    return data;
+  }
+
+  Map<dynamic, dynamic>? maybeDecryptJsonOrNull({
+    required final RemitSenderConnection connection,
+    required final dynamic data,
+  }) {
+    if (secure) {
+      final Uint8List? key = connection.secretKey;
+      if (key == null) {
+        throw RemitException(
+          'Cannot encrypt without secret key',
+          code: RemitErrorCodes.invalidState,
+        );
+      }
+      if (data is! String) return null;
+      return RemitDataEncrypter.decryptJson(data: data, key: key);
+    }
+    if (data is! Map<dynamic, dynamic>) return null;
+    return data;
+  }
+
+  Stream<List<int>> maybeEncryptStream({
+    required final RemitSenderConnection connection,
+    required final Stream<List<int>> stream,
+  }) {
+    if (secure) {
+      final Uint8List? key = connection.secretKey;
+      if (key == null) {
+        throw RemitException(
+          'Cannot encrypt without secret key',
+          code: RemitErrorCodes.invalidState,
+        );
+      }
+      return stream.map(
+        (final List<int> x) => RemitDataEncrypter.encryptBytes(
+          data: Uint8List.fromList(x),
+          key: key,
+        ),
+      );
+    }
+    return stream;
+  }
+
+  Stream<List<int>> maybeDecryptStreamOrNull({
+    required final RemitSenderConnection connection,
+    required final Stream<List<int>> stream,
+  }) {
+    if (secure) {
+      final Uint8List? key = connection.secretKey;
+      if (key == null) {
+        throw RemitException(
+          'Cannot encrypt without secret key',
+          code: RemitErrorCodes.invalidState,
+        );
+      }
+      return stream.map(
+        (final List<int> x) => RemitDataEncrypter.decryptBytes(
+          data: Uint8List.fromList(x),
+          key: key,
+        ),
+      );
+    }
+    return stream;
   }
 
   void startHeartbeat() {

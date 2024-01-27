@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 
@@ -19,7 +20,7 @@ class RemitSenderConnection {
   final int connectedAt;
   final String identifier;
   int lastHeartbeatAt;
-  SecureKey? secretKey;
+  Uint8List? secretKey;
 
   Future<bool> ping() async {
     try {
@@ -72,5 +73,5 @@ class RemitSenderConnection {
       receiverAddress.appendPathUri(path);
 
   String get debugUsername =>
-      'u:sndr:${receiverInfo.username}:$receiverAddress';
+      'u/sndr/${receiverInfo.username}/$receiverAddress';
 }
