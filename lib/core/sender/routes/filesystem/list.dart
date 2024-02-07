@@ -1,3 +1,4 @@
+import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
@@ -19,10 +20,8 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
       );
     }
     final String body = await request.readAsString();
-    final Map<dynamic, dynamic>? data = context.sender.maybeDecryptJsonOrNull(
-      connection: connection,
-      data: body,
-    );
+    final Map<dynamic, dynamic>? data =
+        connection.optionalDecryptJsonOrNull(body);
     final String? path = mapKeyOrNull(data, RemitDataKeys.path);
     if (data == null || path == null) {
       return shelf.Response.badRequest(
@@ -44,14 +43,41 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
     }
     return shelf.Response.ok(
       RemitDataBody.successful(
-        context.sender.maybeEncryptJson(
-          connection: connection,
-          data: <dynamic, dynamic>{
-            RemitDataKeys.entities: entities,
-          },
-        ),
+        connection.optionalEncryptJson(<dynamic, dynamic>{
+          RemitDataKeys.entities: entities,
+        }),
       ),
       headers: RemitHttpHeaders.construct(secure: context.sender.secure),
     );
   }
+
+  Future<List<String>> makeRequest(
+    final RemitReceiverConnection connection,
+  ) async {
+    final http.Response resp = await makeRequestPartial(
+      address: connection.senderAddress,
+      headers: RemitHttpHeaders.construct(
+        contentType: null,
+        secure: connection.secure ?? false,
+        additional: <String, String>{
+          RemitHeaderKeys.token: connection.token ?? '',
+        },
+      ),
+    );
+    final RemitDataBody<dynamic> body = RemitDataBody.deconstruct(resp.body);
+    final Map<dynamic, dynamic>? data =
+        connection.optionalDecryptJsonOrNull(body.data);
+    final List<String>? entities = mapKeyFactoryOrNull(
+      data,
+      RemitDataKeys.entities,
+      (final dynamic x) => (x as List<dynamic>).cast(),
+    );
+    if (entities == null) {
+      throw RemitException.invalidResponseData();
+    }
+    return entities;
+  }
+
+  static final RemitSenderServerConnectionSecretRoute instance =
+      RemitSenderServerConnectionSecretRoute();
 }

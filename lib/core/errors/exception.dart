@@ -27,6 +27,16 @@ class RemitException implements Exception {
         code: RemitErrorCodes.unexpectedResponseData,
       );
 
+  factory RemitException.connectionRejected() => const RemitException(
+        'Node rejected connection request',
+        code: RemitErrorCodes.connectionRejected,
+      );
+
+  factory RemitException.missingSecretKey() => const RemitException(
+        'Missing secret key',
+        code: RemitErrorCodes.missingSecretKey,
+      );
+
   factory RemitException.invaildData() => const RemitException(
         'Received invalid data',
         code: RemitErrorCodes.invalidData,

@@ -1,7 +1,8 @@
+import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
-class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
+class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
   @override
   final String path = '/filesystem/read';
 
@@ -19,10 +20,8 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
       );
     }
     final String body = await request.readAsString();
-    final Map<dynamic, dynamic>? data = context.sender.maybeDecryptJsonOrNull(
-      connection: connection,
-      data: body,
-    );
+    final Map<dynamic, dynamic>? data =
+        connection.optionalDecryptJsonOrNull(body);
     final String? path = mapKeyOrNull(data, RemitDataKeys.path);
     if (data == null || path == null) {
       return shelf.Response.badRequest(
@@ -51,9 +50,8 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
     final int size = await file.size();
     return shelf.Response.ok(
       RemitDataBody.successful(
-        context.sender.maybeEncryptStream(
-          connection: connection,
-          stream: await file.openRead(range.$1, range.$2),
+        connection.optionalEncryptStream(
+          await file.openRead(range.$1, range.$2),
         ),
       ),
       headers: RemitHttpHeaders.construct(
@@ -68,4 +66,26 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
       },
     );
   }
+
+  Future<Stream<List<int>>> makeRequest(
+    final RemitReceiverConnection connection, {
+    required final RSAPublicKey publicKey,
+  }) async {
+    final http.StreamedRequest request = http.StreamedRequest(
+      method,
+      connection.senderAddress.appendPathUri(path),
+    );
+    request.headers.addAll(
+      RemitHttpHeaders.construct(
+        additional: <String, String>{
+          RemitHeaderKeys.token: connection.token ?? '',
+        },
+      ),
+    );
+    final http.ByteStream response = request.finalize();
+    return connection.optionalDecryptStream(response);
+  }
+
+  static final RemitSenderServerFilesystemReadRoute instance =
+      RemitSenderServerFilesystemReadRoute();
 }

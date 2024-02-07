@@ -1,9 +1,13 @@
 import 'dart:typed_data';
 import 'package:convert/convert.dart';
+import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
-class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
+class RemitSenderServerConnectionSecretRoute extends RemitSenderServerRoute {
+  @override
+  final String method = 'POST';
+
   @override
   final String path = '/connection/secret';
 
@@ -62,4 +66,38 @@ class RemitSenderServerSecretRoute extends RemitSenderServerRoute {
       headers: RemitHttpHeaders.construct(),
     );
   }
+
+  Future<Uint8List> makeRequest(
+    final RemitReceiverConnection connection, {
+    required final RSAPublicKey publicKey,
+  }) async {
+    final http.Response resp = await makeRequestPartial(
+      address: connection.senderAddress,
+      headers: RemitHttpHeaders.construct(
+        additional: <String, String>{
+          RemitHeaderKeys.token: connection.token ?? '',
+        },
+      ),
+      body: jsonEncode(<dynamic, dynamic>{
+        RemitDataKeys.publicKey: <dynamic>[
+          publicKey.modulus.toString(),
+          publicKey.exponent.toString(),
+        ],
+      }),
+    );
+    final Map<dynamic, dynamic> data =
+        RemitDataBody.deconstructJsonData(resp.body);
+    final List<int>? encryptedSecretBytes = mapKeyFactoryOrNull(
+      data,
+      RemitDataKeys.secret,
+      (final dynamic encoded) => hex.decode(encoded as String),
+    );
+    if (encryptedSecretBytes == null) {
+      throw RemitException.invalidResponseData();
+    }
+    return Uint8List.fromList(encryptedSecretBytes);
+  }
+
+  static final RemitSenderServerConnectionSecretRoute instance =
+      RemitSenderServerConnectionSecretRoute();
 }

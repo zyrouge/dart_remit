@@ -23,13 +23,13 @@ class RemitSenderServerPingRoute extends RemitSenderServerRoute {
     );
   }
 
-  Future<bool> makeRequest(final RemitSenderConnection connection) async {
+  Future<bool> makeRequest(final RemitReceiverConnection connection) async {
     final http.Response resp = await makeRequestPartial(
-      address: connection.receiverAddress,
+      address: connection.senderAddress,
       headers: RemitHttpHeaders.construct(
         contentType: null,
         additional: <String, String>{
-          RemitHeaderKeys.identifier: connection.identifier,
+          RemitHeaderKeys.token: connection.token ?? '',
         },
       ),
     );

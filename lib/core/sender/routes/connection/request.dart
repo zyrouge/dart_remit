@@ -1,7 +1,11 @@
+import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
 class RemitSenderServerConnectionRequestRoute extends RemitSenderServerRoute {
+  @override
+  final String method = 'POST';
+
   @override
   final String path = '/connection/request';
 
@@ -44,4 +48,23 @@ class RemitSenderServerConnectionRequestRoute extends RemitSenderServerRoute {
       headers: RemitHttpHeaders.construct(),
     );
   }
+
+  Future<bool> makeRequest(
+    final RemitReceiverConnection connection, {
+    required final String inviteCode,
+  }) async {
+    final http.Response resp = await makeRequestPartial(
+      address: connection.senderAddress,
+      headers: RemitHttpHeaders.construct(),
+      body: jsonEncode(<dynamic, dynamic>{
+        RemitDataKeys.info: connection.info.toJson(),
+        RemitDataKeys.connectionAddress: connection.address.toJson(),
+        RemitDataKeys.inviteCode: inviteCode,
+      }),
+    );
+    return resp.statusCode == 200;
+  }
+
+  static final RemitSenderServerConnectionRequestRoute instance =
+      RemitSenderServerConnectionRequestRoute();
 }

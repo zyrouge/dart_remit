@@ -60,7 +60,7 @@ class RemitNativeFolder extends RemitFolder {
     return entities.map((final FileSystemEntity x) {
       if (x is File) return RemitNativeFile(x);
       if (x is Directory) return RemitNativeFolder(x);
-      throw RemitException('Unexpected');
+      throw UnimplementedError();
     });
   }
 

@@ -1,8 +1,7 @@
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 
-class RemitSenderConnection {
+class RemitSenderConnection with RemitOptionalDataEncrypter {
   RemitSenderConnection({
     required this.receiverInfo,
     required this.receiverAddress,
@@ -20,42 +19,22 @@ class RemitSenderConnection {
   final int connectedAt;
   final String identifier;
   int lastHeartbeatAt;
-  Uint8List? secretKey;
 
-  Future<bool> ping() => RemitSenderServerPingRoute.instance.makeRequest(this);
+  @override
+  Uint8List? secret;
 
-  Future<bool> connectionAccepted() async {
-    try {
-      final http.Response resp = await http
-          .post(
-            buildReceiverUri(RemitReceiverServerConnectionAcceptedRoute.path),
-            headers: RemitHttpHeaders.construct(),
-            body: jsonEncode(<dynamic, dynamic>{
-              RemitDataKeys.identifier: identifier,
-              RemitDataKeys.token: token,
-              RemitDataKeys.secure: secure,
-            }),
-          )
-          .timeout(RemitHttpDefaults.requestTimeout);
-      return resp.statusCode == 200;
-    } catch (_) {}
-    return false;
-  }
+  Future<bool> ping() =>
+      RemitReceiverServerPingRoute.instance.makeRequest(this);
 
-  Future<void> disconnect() async {
-    try {
-      await http
-          .post(
-            buildReceiverUri('/disconnect'),
-            headers: RemitHttpHeaders.construct(contentType: null),
-          )
-          .timeout(RemitHttpDefaults.requestTimeout);
-    } catch (_) {}
-  }
+  Future<bool> connectionAccepted() =>
+      RemitReceiverServerConnectionAcceptedRoute.instance.makeRequest(this);
 
-  Uri buildReceiverUri(final String path) =>
-      receiverAddress.appendPathUri(path);
+  Future<void> disconnect() =>
+      RemitReceiverServerConnectionDisconnectRoute.instance.makeRequest(this);
 
   String get debugUsername =>
       'u/sndr/${receiverInfo.username}/$receiverAddress';
+
+  @override
+  bool get requiresEncryption => secure;
 }

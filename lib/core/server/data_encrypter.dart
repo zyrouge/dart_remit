@@ -21,6 +21,17 @@ abstract class RemitDataEncrypter {
     return base64Encode(encryptBytes(data: bytes, key: key));
   }
 
+  static Stream<List<int>> encryptStream({
+    required final Stream<List<int>> data,
+    required final Uint8List key,
+  }) =>
+      data.map(
+        (final List<int> x) => RemitDataEncrypter.encryptBytes(
+          data: Uint8List.fromList(x),
+          key: key,
+        ),
+      );
+
   static Uint8List decryptBytes({
     required final Uint8List data,
     required final Uint8List key,
@@ -41,4 +52,15 @@ abstract class RemitDataEncrypter {
     final Uint8List decrypted = decryptBytes(data: bytes, key: key);
     return jsonDecode(utf8.decode(decrypted)) as Map<dynamic, dynamic>;
   }
+
+  static Stream<List<int>> decryptStream({
+    required final Stream<List<int>> data,
+    required final Uint8List key,
+  }) =>
+      data.map(
+        (final List<int> x) => RemitDataEncrypter.decryptBytes(
+          data: Uint8List.fromList(x),
+          key: key,
+        ),
+      );
 }

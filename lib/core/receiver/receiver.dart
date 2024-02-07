@@ -11,7 +11,7 @@ class RemitReceiver {
   });
 
   final RemitReceiverBasicInfo info;
-  final RemitServer server;
+  final RemitServer<RemitReceiverServerRouteContext> server;
   final RemitReceiverConnection connection;
   final RemitLogger logger;
   final RemitEventer<String> events = RemitEventer<String>();
@@ -20,9 +20,7 @@ class RemitReceiver {
   Timer? heartbeatTimer;
 
   Future<void> initialize() async {
-    for (final RemitReceiverServerRoute route in routes) {
-      route.use(this);
-    }
+    server.routeContext = RemitReceiverServerRouteContext(this);
     logger.info('RemitReceiver', 'ready (server at ${server.address})');
   }
 
@@ -67,15 +65,12 @@ class RemitReceiver {
     required final Map<dynamic, dynamic> data,
   }) {
     if (connection.secure) {
-      if (connection.secretKey == null) {
-        throw RemitException(
-          'Cannot encrypt without secret key',
-          code: RemitErrorCodes.invalidState,
-        );
+      if (connection.secret == null) {
+        throw RemitException.missingSecretKey();
       }
       return RemitDataEncrypter.encryptJson(
         data: data,
-        key: connection.secretKey!,
+        key: connection.secret!,
       );
     }
     return data;
@@ -89,7 +84,7 @@ class RemitReceiver {
       if (data is! String) return null;
       return RemitDataEncrypter.decryptJson(
         data: data,
-        key: connection.secretKey!,
+        key: connection.secret!,
       );
     }
     if (data is! Map<dynamic, dynamic>) return null;
@@ -129,8 +124,9 @@ class RemitReceiver {
 
   static final List<RemitReceiverServerRoute> routes =
       <RemitReceiverServerRoute>[
-    RemitReceiverServerPingRoute(),
-    RemitReceiverServerConnectionAcceptedRoute(),
+    RemitReceiverServerConnectionAcceptedRoute.instance,
+    RemitReceiverServerConnectionDisconnectRoute.instance,
+    RemitReceiverServerPingRoute.instance,
   ];
 
   static Future<RemitReceiver> create({
@@ -142,7 +138,8 @@ class RemitReceiver {
   }) async {
     final RemitSenderBasicInfo senderInfo =
         await RemitReceiverConnection.fetchSenderInfo(senderAddress);
-    final RemitServer server = await RemitServer.createServer(address);
+    final RemitServer<RemitReceiverServerRouteContext> server =
+        await RemitServer.createServer(address, routes);
     final int connectedAt = DateTime.now().millisecondsSinceEpoch;
     final RemitReceiverConnection connection = RemitReceiverConnection(
       info: info,
@@ -161,10 +158,7 @@ class RemitReceiver {
     final bool requested = await connection.connectionRequest(inviteCode);
     if (!requested) {
       await receiver.destroy();
-      throw RemitException(
-        'Connection request rejected',
-        code: RemitErrorCodes.connectionReject,
-      );
+      throw RemitException.connectionRejected();
     }
     return receiver;
   }

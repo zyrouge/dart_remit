@@ -1,10 +1,13 @@
-import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
-class RemitReceiverServerPingRoute extends RemitReceiverServerRoute {
+class RemitReceiverServerConnectionDisconnectRoute
+    extends RemitReceiverServerRoute {
   @override
-  final String path = '/ping';
+  final String method = 'POST';
+
+  @override
+  final String path = '/connection/disconnect';
 
   @override
   shelf.Response onRequest(
@@ -17,14 +20,15 @@ class RemitReceiverServerPingRoute extends RemitReceiverServerRoute {
         headers: RemitHttpHeaders.construct(),
       );
     }
+    context.receiver.onSenderDisconnected();
     return shelf.Response.ok(
       RemitDataBody.successful(),
       headers: RemitHttpHeaders.construct(),
     );
   }
 
-  Future<bool> makeRequest(final RemitSenderConnection connection) async {
-    final http.Response resp = await makeRequestPartial(
+  Future<void> makeRequest(final RemitSenderConnection connection) async {
+    await makeRequestPartial(
       address: connection.receiverAddress,
       headers: RemitHttpHeaders.construct(
         contentType: null,
@@ -33,9 +37,8 @@ class RemitReceiverServerPingRoute extends RemitReceiverServerRoute {
         },
       ),
     );
-    return resp.statusCode == 200;
   }
 
-  static final RemitReceiverServerPingRoute instance =
-      RemitReceiverServerPingRoute();
+  static final RemitReceiverServerConnectionDisconnectRoute instance =
+      RemitReceiverServerConnectionDisconnectRoute();
 }

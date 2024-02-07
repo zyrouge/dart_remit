@@ -39,21 +39,30 @@ class RemitDataBody<T> {
   ]) =>
       RemitDataBody<T>(success: success, data: data, error: error).toString();
 
-  static RemitDataBody<T>? deconstruct<T>(final String body) {
+  static RemitDataBody<T> deconstruct<T>(final String body) {
     try {
       return RemitDataBody<T>.fromString(body);
-    } catch (_) {}
-    return null;
+    } catch (_) {
+      throw RemitException.invalidResponseData();
+    }
+  }
+
+  static Map<dynamic, dynamic> deconstructJsonData<T>(final String body) {
+    final RemitJsonDataBody data = RemitDataBody.deconstruct(body);
+    if (!data.success) {
+      throw data.error ?? RemitException.nonSuccessResponse();
+    }
+    if (data.data == null) {
+      throw RemitException.unexpectedResponseData();
+    }
+    return data.data!;
   }
 
   static T deconstructJsonDataFactory<T>(
     final String body,
     final T Function(Map<dynamic, dynamic>) factoryFn,
   ) {
-    final RemitJsonDataBody? data = RemitDataBody.deconstruct(body);
-    if (data == null) {
-      throw RemitException.invalidResponseData();
-    }
+    final RemitJsonDataBody data = RemitDataBody.deconstruct(body);
     if (!data.success) {
       throw data.error ?? RemitException.nonSuccessResponse();
     }
