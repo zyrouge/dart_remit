@@ -3,7 +3,7 @@ import 'package:remit/exports.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
 
-class RemitServer {
+class RemitServer<RouteContext extends RemitServerRouteContext> {
   RemitServer._({
     required this.http,
     required this.app,
@@ -11,6 +11,7 @@ class RemitServer {
 
   final HttpServer http;
   final shelf_router.Router app;
+  late final RouteContext routeContext;
 
   Future<void> destroy() async {
     await http.close(force: true);
@@ -20,17 +21,22 @@ class RemitServer {
   int get port => http.port;
   RemitConnectionAddress get address => RemitConnectionAddress(host, port);
 
-  static Future<RemitServer> createServer(
+  static Future<RemitServer<RouteContext>>
+      createServer<RouteContext extends RemitServerRouteContext>(
     final RemitConnectionAddress address,
+    final List<RemitServerRoute<RouteContext>> routes,
   ) async {
     final shelf_router.Router app = shelf_router.Router();
+    for (final RemitServerRoute<RouteContext> x in routes) {
+      app.add(x.method, x.path, x.onRequest);
+    }
     final HttpServer http = await shelf_io.serve(
       app.call,
       address.host,
       address.port,
       poweredByHeader: RemitHttpHeaders.userAgent,
     );
-    return RemitServer._(app: app, http: http);
+    return RemitServer<RouteContext>._(app: app, http: http);
   }
 
   static Future<List<InternetAddress>> getAvailableNetworks() async {

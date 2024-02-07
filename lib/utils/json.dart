@@ -8,6 +8,9 @@ dynamic jsonDecodeOrNull(final String source) {
   } catch (_) {}
 }
 
+Map<dynamic, dynamic> jsonDecodeMap(final String source) =>
+    jsonDecode(source) as Map<dynamic, dynamic>;
+
 Map<dynamic, dynamic>? jsonDecodeMapOrNull(final String source) {
   try {
     return jsonDecode(source) as Map<dynamic, dynamic>;

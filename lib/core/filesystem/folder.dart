@@ -16,7 +16,7 @@ abstract class RemitFolder extends RemitFilesystemEntity {
         if (x is! RemitFolder) {
           throw RemitException(
             'Unsupported resolve on ${x.type.name} "$first"',
-            code: RemitErrorCode.unsupportedOperation,
+            code: RemitErrorCodes.unsupportedOperation,
           );
         }
         return x.resolvePaths(paths.sublist(1));

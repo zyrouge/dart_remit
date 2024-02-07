@@ -13,7 +13,7 @@ class RemitDataBody<T> {
       RemitDataBody<T>(
         success: data['success'] as bool,
         data: data['data'] as T?,
-        error: data['error'] as String?,
+        error: mapKeyFactoryOrNull(data, 'error', RemitException.fromJson),
       );
 
   factory RemitDataBody.fromString(final String data) =>
@@ -21,7 +21,7 @@ class RemitDataBody<T> {
 
   final bool success;
   final T? data;
-  final String? error;
+  final RemitException? error;
 
   Map<dynamic, dynamic> toJson() => <dynamic, dynamic>{
         'success': success,
@@ -35,7 +35,7 @@ class RemitDataBody<T> {
   static String construct<T>(
     final bool success, [
     final T? data,
-    final String? error,
+    final RemitException? error,
   ]) =>
       RemitDataBody<T>(success: success, data: data, error: error).toString();
 
@@ -46,10 +46,28 @@ class RemitDataBody<T> {
     return null;
   }
 
+  static T deconstructJsonDataFactory<T>(
+    final String body,
+    final T Function(Map<dynamic, dynamic>) factoryFn,
+  ) {
+    final RemitJsonDataBody? data = RemitDataBody.deconstruct(body);
+    if (data == null) {
+      throw RemitException.invalidResponseData();
+    }
+    if (!data.success) {
+      throw data.error ?? RemitException.nonSuccessResponse();
+    }
+    final T? info = jsonFactoryOrNull(data.data, factoryFn);
+    if (info == null) {
+      throw RemitException.unexpectedResponseData();
+    }
+    return info;
+  }
+
   static String successful<T>([final T? data]) => construct<T>(true, data);
 
   static String failure<T>([
-    final String? error,
+    final RemitException? error,
     final T? data,
   ]) =>
       construct<T>(false, data, error);

@@ -82,14 +82,14 @@ class RemitReceiverConnection {
       if (resp.statusCode != 200) {
         throw RemitException(
           'Fetching secret returned ${resp.statusCode} status code',
-          code: RemitErrorCode.unexpectedResponse,
+          code: RemitErrorCodes.unexpectedResponse,
         );
       }
       final RemitJsonDataBody? data = RemitDataBody.deconstruct(resp.body);
       if (data == null || !data.success) {
         throw RemitException(
           'Received non-success response',
-          code: RemitErrorCode.unexpectedResponse,
+          code: RemitErrorCodes.unexpectedResponse,
         );
       }
       final List<int>? encryptedSecretBytes = mapKeyFactoryOrNull(
@@ -100,14 +100,14 @@ class RemitReceiverConnection {
       if (encryptedSecretBytes == null) {
         throw RemitException(
           'Invalid secret received',
-          code: RemitErrorCode.invalidData,
+          code: RemitErrorCodes.invalidData,
         );
       }
       return Uint8List.fromList(encryptedSecretBytes);
     } catch (error) {
       throw RemitException(
         error.toString(),
-        code: RemitErrorCode.unexpectedError,
+        code: RemitErrorCodes.unexpectedError,
       );
     }
   }
@@ -144,14 +144,14 @@ class RemitReceiverConnection {
     if (resp.statusCode != 200) {
       throw RemitException(
         'Fetching sender info returned ${resp.statusCode} status code',
-        code: RemitErrorCode.unexpectedResponse,
+        code: RemitErrorCodes.unexpectedResponse,
       );
     }
     final RemitJsonDataBody? data = RemitDataBody.deconstruct(resp.body);
     if (data == null || !data.success) {
       throw RemitException(
         'Received non-success response',
-        code: RemitErrorCode.unexpectedResponse,
+        code: RemitErrorCodes.unexpectedResponse,
       );
     }
     final RemitSenderBasicInfo? info = jsonFactoryOrNull(
@@ -161,7 +161,7 @@ class RemitReceiverConnection {
     if (info == null) {
       throw RemitException(
         'Received invalid data',
-        code: RemitErrorCode.invalidData,
+        code: RemitErrorCodes.invalidData,
       );
     }
     return info;

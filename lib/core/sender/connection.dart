@@ -22,23 +22,7 @@ class RemitSenderConnection {
   int lastHeartbeatAt;
   Uint8List? secretKey;
 
-  Future<bool> ping() async {
-    try {
-      final http.Response resp = await http
-          .post(
-            buildReceiverUri(RemitSenderServerPingRoute.path),
-            headers: RemitHttpHeaders.construct(
-              contentType: null,
-              additional: <String, String>{
-                RemitHeaderKeys.identifier: identifier,
-              },
-            ),
-          )
-          .timeout(RemitHttpDefaults.requestTimeout);
-      return resp.statusCode == 200;
-    } catch (_) {}
-    return false;
-  }
+  Future<bool> ping() => RemitSenderServerPingRoute.instance.makeRequest(this);
 
   Future<bool> connectionAccepted() async {
     try {

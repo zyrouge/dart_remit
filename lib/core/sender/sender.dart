@@ -11,7 +11,7 @@ class RemitSender {
   }) : inviteCode = UUID.generateInviteCode();
 
   final RemitSenderBasicInfo info;
-  final RemitServer server;
+  final RemitServer<RemitServerRouteContext> server;
   final bool secure;
   final RemitLogger logger;
   String inviteCode;
@@ -29,9 +29,7 @@ class RemitSender {
   Timer? heartbeatTimer;
 
   Future<void> initialize() async {
-    for (final RemitSenderServerRoute route in routes) {
-      route.use(this);
-    }
+    server.routeContext = RemitSenderServerRouteContext(this);
     active = true;
     startHeartbeat();
     logger.info('RemitSender', 'ready (server at ${server.address})');
@@ -216,10 +214,10 @@ class RemitSender {
   }
 
   static final List<RemitSenderServerRoute> routes = <RemitSenderServerRoute>[
-    RemitSenderServerPingRoute(),
+    RemitSenderServerPingRoute.instance,
     RemitSenderServerConnectionRequestRoute(),
     RemitSenderServerSecretRoute(),
-    RemitSenderServerInfoRoute(),
+    RemitSenderServerInfoRoute.instance,
   ];
 
   static Future<RemitSender> create({
@@ -228,7 +226,8 @@ class RemitSender {
     required final bool secure,
     required final RemitLogger logger,
   }) async {
-    final RemitServer server = await RemitServer.createServer(address);
+    final RemitServer<RemitSenderServerRouteContext> server =
+        await RemitServer.createServer(address, routes);
     final RemitSender master = RemitSender._(
       info: info,
       server: server,
