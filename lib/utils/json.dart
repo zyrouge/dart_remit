@@ -48,3 +48,14 @@ V? mapKeyFactoryOrNull<U, V>(
   } catch (_) {}
   return null;
 }
+
+List<V>? mapKeyAsListOrNull<U, V>(
+  final Map<dynamic, dynamic>? map,
+  final dynamic key,
+) {
+  if (map == null) return null;
+  try {
+    return (map[key] as List<dynamic>).cast<V>();
+  } catch (_) {}
+  return null;
+}

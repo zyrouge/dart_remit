@@ -37,21 +37,29 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
         headers: RemitHttpHeaders.construct(),
       );
     }
-    final List<String> entities = <String>[];
+    final List<String> files = <String>[];
+    final List<String> folders = <String>[];
     await for (final RemitFilesystemEntity x in await folder.list()) {
-      entities.add(x.basename);
+      switch (x.type) {
+        case RemitFilesystemEntityType.file:
+          files.add(x.basename);
+
+        case RemitFilesystemEntityType.folder:
+          folders.add(x.basename);
+      }
     }
     return shelf.Response.ok(
       RemitDataBody.successful(
         connection.optionalEncryptJson(<dynamic, dynamic>{
-          RemitDataKeys.entities: entities,
+          RemitDataKeys.files: files,
+          RemitDataKeys.folders: folders,
         }),
       ),
       headers: RemitHttpHeaders.construct(secure: context.sender.secure),
     );
   }
 
-  Future<List<String>> makeRequest(
+  Future<({List<String> files, List<String> folders})> makeRequest(
     final RemitReceiverConnection connection,
   ) async {
     final http.Response resp = await makeRequestPartial(
@@ -67,15 +75,13 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
     final RemitDataBody<dynamic> body = RemitDataBody.deconstruct(resp.body);
     final Map<dynamic, dynamic>? data =
         connection.optionalDecryptJsonOrNull(body.data);
-    final List<String>? entities = mapKeyFactoryOrNull(
-      data,
-      RemitDataKeys.entities,
-      (final dynamic x) => (x as List<dynamic>).cast(),
-    );
-    if (entities == null) {
+    final List<String>? files = mapKeyAsListOrNull(data, RemitDataKeys.files);
+    final List<String>? folders =
+        mapKeyAsListOrNull(data, RemitDataKeys.folders);
+    if (files == null || folders == null) {
       throw RemitException.invalidResponseData();
     }
-    return entities;
+    return (files: files, folders: folders);
   }
 
   static final RemitSenderServerConnectionSecretRoute instance =
