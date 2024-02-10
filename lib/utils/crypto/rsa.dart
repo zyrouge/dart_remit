@@ -10,10 +10,12 @@ export 'package:pointycastle/api.dart' show AsymmetricKeyPair;
 export 'package:pointycastle/asymmetric/api.dart'
     show RSAPrivateKey, RSAPublicKey;
 
+typedef RSAKeyPair = AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey>;
+
 // Source: https://github.com/bcgit/pc-dart/blob/master/tutorials/rsa.md,
 //         https://github.com/leocavalcante/encrypt/blob/5.x/lib/src/algorithms/rsa.dart
 abstract class RSA {
-  static AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey> generateKeyPair(
+  static RSAKeyPair generateKeyPair(
     final SecureRandom secureRandom, {
     final int bitLength = 2048,
   }) {
@@ -28,10 +30,7 @@ abstract class RSA {
         keyGen.generateKeyPair();
     final RSAPublicKey publicKey = pair.publicKey as RSAPublicKey;
     final RSAPrivateKey privateKey = pair.privateKey as RSAPrivateKey;
-    return AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey>(
-      publicKey,
-      privateKey,
-    );
+    return RSAKeyPair(publicKey, privateKey);
   }
 
   static Uint8List encrypt({
@@ -45,10 +44,10 @@ abstract class RSA {
 
   static Uint8List decrypt({
     required final Uint8List encrypted,
-    required final RSAPublicKey publicKey,
+    required final RSAPrivateKey privateKey,
   }) {
     final PKCS1Encoding decryptor = PKCS1Encoding(RSAEngine());
-    decryptor.init(false, PublicKeyParameter<RSAPublicKey>(publicKey));
+    decryptor.init(false, PrivateKeyParameter<RSAPrivateKey>(privateKey));
     return decryptor.process(encrypted);
   }
 }

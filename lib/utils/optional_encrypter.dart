@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:remit/exports.dart';
 
 mixin RemitOptionalDataEncrypter {
-  dynamic optionalEncryptJson(final Map<dynamic, dynamic> data) {
+  String optionalEncryptJson(final Map<dynamic, dynamic> data) {
     if (requiresEncryption) {
       final Uint8List? key = secret;
       if (key == null) {
@@ -10,20 +10,18 @@ mixin RemitOptionalDataEncrypter {
       }
       return RemitDataEncrypter.encryptJson(data: data, key: key);
     }
-    return data;
+    return jsonEncode(data);
   }
 
-  Map<dynamic, dynamic>? optionalDecryptJsonOrNull(final dynamic data) {
+  Map<dynamic, dynamic>? optionalDecryptJsonOrNull(final String data) {
     if (requiresEncryption) {
       final Uint8List? key = secret;
       if (key == null) {
         throw RemitException.missingSecretKey();
       }
-      if (data is! String) return null;
       return RemitDataEncrypter.decryptJson(data: data, key: key);
     }
-    if (data is! Map<dynamic, dynamic>) return null;
-    return data;
+    return jsonDecodeMap(data);
   }
 
   Stream<List<int>> optionalEncryptStream(final Stream<List<int>> stream) {

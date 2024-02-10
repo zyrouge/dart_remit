@@ -30,9 +30,23 @@ class RemitReceiverConnection with RemitOptionalDataEncrypter {
       RemitSenderServerConnectionRequestRoute.instance
           .makeRequest(this, inviteCode: inviteCode);
 
-  Future<Uint8List> fetchSecret(final RSAPublicKey publicKey) =>
+  Future<Uint8List> fetchSecret(final RSAKeyPair keyPair) =>
       RemitSenderServerConnectionSecretRoute.instance
-          .makeRequest(this, publicKey: publicKey);
+          .makeRequest(this, keyPair: keyPair);
+
+  Future<RemitSenderServerFilesystemListData> filesystemList(
+    final String path,
+  ) =>
+      RemitSenderServerFilesystemListRoute.instance
+          .makeRequest(this, path: path);
+
+  Future<Stream<List<int>>> filesystemRead(
+    final String path, {
+    final int? start,
+    final int? end,
+  }) =>
+      RemitSenderServerFilesystemReadRoute.instance
+          .makeRequest(this, path: path, rangeStart: start, rangeEnd: end);
 
   Future<void> disconnect() =>
       RemitSenderServerConnectionDisconnectRoute.instance.makeRequest(this);

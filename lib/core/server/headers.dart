@@ -24,4 +24,9 @@ class RemitHttpHeaders {
     if (match == null) return null;
     return (int.tryParse(match.group(1)!), int.tryParse(match.group(2)!));
   }
+
+  static String? createRangeHeader([final int? start, final int? end]) {
+    if (start == null && end == null) return null;
+    return '${start ?? ''}-${end ?? ''}';
+  }
 }

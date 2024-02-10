@@ -2,7 +2,15 @@ import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
+typedef RemitSenderServerFilesystemListData = ({
+  List<String> files,
+  List<String> folders
+});
+
 class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
+  @override
+  final String method = 'POST';
+
   @override
   final String path = '/filesystem/list';
 
@@ -59,22 +67,31 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
     );
   }
 
-  Future<({List<String> files, List<String> folders})> makeRequest(
-    final RemitReceiverConnection connection,
-  ) async {
+  Future<RemitSenderServerFilesystemListData> makeRequest(
+    final RemitReceiverConnection connection, {
+    required final String path,
+  }) async {
     final http.Response resp = await makeRequestPartial(
       address: connection.senderAddress,
       headers: RemitHttpHeaders.construct(
-        contentType: null,
         secure: connection.secure ?? false,
         additional: <String, String>{
           RemitHeaderKeys.token: connection.token ?? '',
         },
       ),
+      body: connection.optionalEncryptJson(<dynamic, dynamic>{
+        RemitDataKeys.path: path,
+      }),
     );
-    final RemitDataBody<dynamic> body = RemitDataBody.deconstruct(resp.body);
+    final RemitDataBody<String> body = RemitDataBody.deconstruct(resp.body);
+    if (!body.success) {
+      throw body.error ?? RemitException.nonSuccessResponse();
+    }
+    if (body.data == null) {
+      throw RemitException.unexpectedResponseData();
+    }
     final Map<dynamic, dynamic>? data =
-        connection.optionalDecryptJsonOrNull(body.data);
+        connection.optionalDecryptJsonOrNull(body.data!);
     final List<String>? files = mapKeyAsListOrNull(data, RemitDataKeys.files);
     final List<String>? folders =
         mapKeyAsListOrNull(data, RemitDataKeys.folders);
@@ -84,6 +101,6 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
     return (files: files, folders: folders);
   }
 
-  static final RemitSenderServerConnectionSecretRoute instance =
-      RemitSenderServerConnectionSecretRoute();
+  static final RemitSenderServerFilesystemListRoute instance =
+      RemitSenderServerFilesystemListRoute();
 }

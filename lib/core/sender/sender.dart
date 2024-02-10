@@ -21,7 +21,7 @@ class RemitSender {
   final Map<String, int> tokens = <String, int>{};
   final SequentialUUIDGenerator receiverIdGenerator = SequentialUUIDGenerator();
   final RemitVirtualFolder filesystem = RemitVirtualFolder(
-    basename: '/',
+    basename: filesystemRootBasename,
     entities: <String, RemitFile>{},
   );
 
@@ -74,7 +74,9 @@ class RemitSender {
       'disconnecting from ${connection.debugUsername}',
     );
     tokens.remove(connection.token);
-    await connection.disconnect();
+    try {
+      await connection.disconnect();
+    } catch (_) {}
     logger.info('RemitSender', 'disconnected from ${connection.debugUsername}');
   }
 
@@ -89,10 +91,10 @@ class RemitSender {
       removeConnection(receiverId);
       return null;
     }
-    final Uint8List secureKey = SecureKey.generate32bits();
-    connection.secret = secureKey;
+    final Uint8List secretKey = SecureKey.generate32bytes();
+    connection.secret = secretKey;
     logger.info('RemitSender', 'secret set for ${connection.debugUsername}');
-    return secureKey;
+    return secretKey;
   }
 
   void updateFilesystem(final void Function(RemitVirtualFolder root) updater) {
@@ -128,10 +130,12 @@ class RemitSender {
   Future<void> destroy() async {
     heartbeatTimer?.cancel();
     await server.destroy();
-    for (final int receiverId in connections.keys) {
+    for (final int receiverId in connections.keys.toList()) {
       removeConnection(receiverId);
     }
   }
+
+  static const String filesystemRootBasename = '/';
 
   static final List<RemitSenderServerRoute> routes = <RemitSenderServerRoute>[
     RemitSenderServerConnectionRequestRoute.instance,

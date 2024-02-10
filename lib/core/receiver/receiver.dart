@@ -18,6 +18,7 @@ class RemitReceiver {
 
   bool active = false;
   Timer? heartbeatTimer;
+  final Completer<void> _connectionCompleter = Completer<void>();
 
   Future<void> initialize() async {
     server.routeContext = RemitReceiverServerRouteContext(this);
@@ -34,23 +35,24 @@ class RemitReceiver {
     connection.secure = secure;
     if (secure) {
       logger.info('RemitReceiver', 'fetching secret key');
-      final AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey> keyPair =
-          RSA.generateKeyPair(createFortunaRandom());
+      final RSAKeyPair keyPair = RSA.generateKeyPair(createFortunaRandom());
       try {
-        final Uint8List secret =
-            await connection.fetchSecret(keyPair.publicKey);
-        connection.secret = secret;
+        final Uint8List secretKey = await connection.fetchSecret(keyPair);
+        connection.secret = secretKey;
         logger.info('RemitReceiver', 'fetched secret key');
       } catch (error) {
         logger.error(
           'RemitReceiver',
           'fetching secret failed, destroying (err: $error)',
         );
+        _connectionCompleter
+            .completeError(RemitException.cannotFetchSecretKey());
         destroy();
         rethrow;
       }
     }
     active = true;
+    _connectionCompleter.complete();
     startHeartbeat();
     logger.info('RemitReceiver', 'connected to ${connection.debugUsername}');
   }
@@ -117,10 +119,14 @@ class RemitReceiver {
     connection.identifier = null;
     connection.token = null;
     heartbeatTimer?.cancel();
-    await connection.disconnect();
+    try {
+      await connection.disconnect();
+    } catch (_) {}
     await server.destroy();
     logger.info('RemitReceiver', 'destroyed');
   }
+
+  Future<void> get connectionFuture => _connectionCompleter.future;
 
   static final List<RemitReceiverServerRoute> routes =
       <RemitReceiverServerRoute>[
@@ -160,6 +166,7 @@ class RemitReceiver {
       await receiver.destroy();
       throw RemitException.connectionRejected();
     }
+    await receiver.connectionFuture;
     return receiver;
   }
 }

@@ -7,9 +7,12 @@ abstract class RemitDataEncrypter {
     required final Uint8List data,
     required final Uint8List key,
   }) {
-    final Uint8List iv = SecureKey.generate12bits();
+    final Uint8List iv = SecureKey.generate12bytes();
     final Uint8List encrypted =
         ChaCha20Poly1305.encrypt(data: data, key: key, iv: iv);
+    print('encryptBytes');
+    print(encrypted);
+    print(iv);
     return EncryptedWithIV(encrypted: encrypted, iv: iv).combine();
   }
 
@@ -26,7 +29,7 @@ abstract class RemitDataEncrypter {
     required final Uint8List key,
   }) =>
       data.map(
-        (final List<int> x) => RemitDataEncrypter.encryptBytes(
+        (final List<int> x) => encryptBytes(
           data: Uint8List.fromList(x),
           key: key,
         ),
@@ -37,6 +40,9 @@ abstract class RemitDataEncrypter {
     required final Uint8List key,
   }) {
     final EncryptedWithIV combined = EncryptedWithIV.parse(data);
+    print('decryptBytes');
+    print(combined.encrypted);
+    print(combined.iv);
     return ChaCha20Poly1305.decrypt(
       encrypted: combined.encrypted,
       key: key,
@@ -50,7 +56,7 @@ abstract class RemitDataEncrypter {
   }) {
     final Uint8List bytes = base64Decode(data);
     final Uint8List decrypted = decryptBytes(data: bytes, key: key);
-    return jsonDecode(utf8.decode(decrypted)) as Map<dynamic, dynamic>;
+    return jsonDecodeMap(utf8.decode(decrypted));
   }
 
   static Stream<List<int>> decryptStream({
@@ -58,9 +64,7 @@ abstract class RemitDataEncrypter {
     required final Uint8List key,
   }) =>
       data.map(
-        (final List<int> x) => RemitDataEncrypter.decryptBytes(
-          data: Uint8List.fromList(x),
-          key: key,
-        ),
+        (final List<int> x) =>
+            decryptBytes(data: Uint8List.fromList(x), key: key),
       );
 }

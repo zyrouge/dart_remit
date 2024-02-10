@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
 class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
+  @override
+  final String method = 'POST';
+
   @override
   final String path = '/filesystem/read';
 
@@ -49,10 +53,8 @@ class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
     }
     final int size = await file.size();
     return shelf.Response.ok(
-      RemitDataBody.successful(
-        connection.optionalEncryptStream(
-          await file.openRead(range.$1, range.$2),
-        ),
+      connection.optionalEncryptStream(
+        await file.openRead(range.$1, range.$2),
       ),
       headers: RemitHttpHeaders.construct(
         secure: context.sender.secure,
@@ -69,21 +71,29 @@ class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
 
   Future<Stream<List<int>>> makeRequest(
     final RemitReceiverConnection connection, {
-    required final RSAPublicKey publicKey,
+    required final String path,
+    required final int? rangeStart,
+    required final int? rangeEnd,
   }) async {
-    final http.StreamedRequest request = http.StreamedRequest(
-      method,
-      connection.senderAddress.appendPathUri(path),
-    );
-    request.headers.addAll(
-      RemitHttpHeaders.construct(
+    final String? rangeHeader =
+        RemitHttpHeaders.createRangeHeader(rangeStart, rangeEnd);
+    final http.StreamedResponse response = await makeRequestPartialStreamed(
+      address: connection.senderAddress,
+      headers: RemitHttpHeaders.construct(
+        secure: connection.secure ?? false,
         additional: <String, String>{
           RemitHeaderKeys.token: connection.token ?? '',
+          if (rangeHeader != null) 'Range': rangeHeader,
         },
       ),
+      body: connection.optionalEncryptJson(<dynamic, dynamic>{
+        RemitDataKeys.path: path,
+      }),
     );
-    final http.ByteStream response = request.finalize();
-    return connection.optionalDecryptStream(response);
+    if (response.statusCode != 200) {
+      throw RemitException.nonSuccessResponse();
+    }
+    return connection.optionalDecryptStream(response.stream);
   }
 
   static final RemitSenderServerFilesystemReadRoute instance =

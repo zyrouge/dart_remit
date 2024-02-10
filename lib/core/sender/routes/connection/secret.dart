@@ -69,7 +69,7 @@ class RemitSenderServerConnectionSecretRoute extends RemitSenderServerRoute {
 
   Future<Uint8List> makeRequest(
     final RemitReceiverConnection connection, {
-    required final RSAPublicKey publicKey,
+    required final RSAKeyPair keyPair,
   }) async {
     final http.Response resp = await makeRequestPartial(
       address: connection.senderAddress,
@@ -80,8 +80,8 @@ class RemitSenderServerConnectionSecretRoute extends RemitSenderServerRoute {
       ),
       body: jsonEncode(<dynamic, dynamic>{
         RemitDataKeys.publicKey: <dynamic>[
-          publicKey.modulus.toString(),
-          publicKey.exponent.toString(),
+          keyPair.publicKey.modulus.toString(),
+          keyPair.publicKey.exponent.toString(),
         ],
       }),
     );
@@ -95,7 +95,11 @@ class RemitSenderServerConnectionSecretRoute extends RemitSenderServerRoute {
     if (encryptedSecretBytes == null) {
       throw RemitException.invalidResponseData();
     }
-    return Uint8List.fromList(encryptedSecretBytes);
+    final Uint8List secretKey = RSA.decrypt(
+      encrypted: Uint8List.fromList(encryptedSecretBytes),
+      privateKey: keyPair.privateKey,
+    );
+    return secretKey;
   }
 
   static final RemitSenderServerConnectionSecretRoute instance =

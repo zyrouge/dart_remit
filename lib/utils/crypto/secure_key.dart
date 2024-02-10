@@ -13,8 +13,8 @@ abstract class SecureKey {
     return bytes;
   }
 
-  static Uint8List generate12bits() => generate(12);
-  static Uint8List generate32bits() => generate(32);
+  static Uint8List generate12bytes() => generate(12);
+  static Uint8List generate32bytes() => generate(32);
 
   List<int> parseHexString(final String data) => hex.decode(data);
   String toHexString(final List<int> data) => hex.encode(data);

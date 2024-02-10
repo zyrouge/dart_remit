@@ -20,16 +20,35 @@ abstract class RemitServerRoute<Context extends RemitServerRouteContext> {
 
   Future<http.Response> makeRequestPartial({
     required final RemitConnectionAddress address,
-    final Object? body,
+    final String? body,
     final Map<String, String>? headers,
-  }) {
+  }) async {
+    final http.StreamedResponse response = await makeRequestPartialStreamed(
+      address: address,
+      body: body,
+      headers: headers,
+    );
+    return http.Response.fromStream(response)
+        .timeout(RemitHttpDefaults.requestTimeout);
+  }
+
+  Future<http.StreamedResponse> makeRequestPartialStreamed({
+    required final RemitConnectionAddress address,
+    final String? body,
+    final Map<String, String>? headers,
+  }) async {
     final Uri uri = address.appendPathUri(path);
-    final Future<http.Response> response = switch (method) {
-      'GET' when body == null => http.get(uri, headers: headers),
-      'POST' => http.post(uri, body: body, headers: headers),
-      _ => throw UnimplementedError()
-    };
-    return response.timeout(RemitHttpDefaults.requestTimeout);
+    final http.Request request = http.Request(method, uri);
+    if (headers != null) {
+      request.headers.addAll(headers);
+    }
+    if (body != null) {
+      if (method == 'GET') {
+        throw UnsupportedError('Cannot create GET with body');
+      }
+      request.body = body;
+    }
+    return request.send();
   }
 
   String get method => 'GET';
