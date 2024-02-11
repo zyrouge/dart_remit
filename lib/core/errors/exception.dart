@@ -38,6 +38,11 @@ class RemitException implements Exception {
         code: RemitErrorCodes.missingSecretKey,
       );
 
+  factory RemitException.missingNonce() => const RemitException(
+        'Missing nonce key',
+        code: RemitErrorCodes.missingNonce,
+      );
+
   factory RemitException.cannotBrowseNonFolders() => const RemitException(
         'Cannot browse non-folder entity',
         code: RemitErrorCodes.cannotBrowseNonFolders,
@@ -52,11 +57,6 @@ class RemitException implements Exception {
   factory RemitException.cannotFetchSecretKey() => const RemitException(
         'Cannot fetch secret key',
         code: RemitErrorCodes.cannotFetchSecretKey,
-      );
-
-  factory RemitException.invaildData() => const RemitException(
-        'Received invalid data',
-        code: RemitErrorCodes.invalidData,
       );
 
   final String text;

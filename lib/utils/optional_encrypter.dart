@@ -24,26 +24,40 @@ mixin RemitOptionalDataEncrypter {
     return jsonDecodeMap(data);
   }
 
-  Stream<List<int>> optionalEncryptStream(final Stream<List<int>> stream) {
+  Stream<List<int>> optionalEncryptStream({
+    required final Stream<List<int>> stream,
+    required final Uint8List? iv,
+  }) {
     if (requiresEncryption) {
       final Uint8List? key = secret;
       if (key == null) {
         throw RemitException.missingSecretKey();
       }
-      return RemitDataEncrypter.encryptStream(data: stream, key: key);
+      if (iv == null) {
+        throw RemitException.missingSecretKey();
+      }
+      return RemitDataEncrypter.encryptStream(data: stream, key: key, iv: iv);
     }
     return stream;
   }
 
-  Stream<List<int>> optionalDecryptStream(
-    final Stream<List<int>> stream,
-  ) {
+  Stream<List<int>> optionalDecryptStream({
+    required final Stream<List<int>> stream,
+    required final Uint8List? iv,
+  }) {
     if (requiresEncryption) {
       final Uint8List? key = secret;
       if (key == null) {
         throw RemitException.missingSecretKey();
       }
-      return RemitDataEncrypter.decryptStream(data: stream, key: key);
+      if (iv == null) {
+        throw RemitException.missingSecretKey();
+      }
+      return RemitDataEncrypter.decryptStream(
+        encrypted: stream,
+        key: key,
+        iv: iv,
+      );
     }
     return stream;
   }

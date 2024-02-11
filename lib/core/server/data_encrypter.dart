@@ -3,68 +3,54 @@ import 'dart:typed_data';
 import 'package:remit/exports.dart';
 
 abstract class RemitDataEncrypter {
-  static Uint8List encryptBytes({
-    required final Uint8List data,
-    required final Uint8List key,
-  }) {
-    final Uint8List iv = SecureKey.generate12bytes();
-    final Uint8List encrypted =
-        ChaCha20Poly1305.encrypt(data: data, key: key, iv: iv);
-    print('encryptBytes');
-    print(encrypted);
-    print(iv);
-    return EncryptedWithIV(encrypted: encrypted, iv: iv).combine();
-  }
-
   static String encryptJson({
     required final Map<dynamic, dynamic> data,
     required final Uint8List key,
   }) {
-    final Uint8List bytes = utf8.encode(jsonEncode(data));
-    return base64Encode(encryptBytes(data: bytes, key: key));
+    final String json = jsonEncode(data);
+    final Uint8List bytes = utf8.encode(json);
+    final Uint8List iv = SecureKey.generate8bytes();
+    final Uint8List encrypted = ChaCha20.encrypt(data: bytes, key: key, iv: iv);
+    final Uint8List combined =
+        EncryptedWithIV(encrypted: encrypted, iv: iv).combine();
+    return base64Encode(combined);
   }
 
   static Stream<List<int>> encryptStream({
     required final Stream<List<int>> data,
     required final Uint8List key,
+    required final Uint8List iv,
   }) =>
       data.map(
-        (final List<int> x) => encryptBytes(
-          data: Uint8List.fromList(x),
-          key: key,
-        ),
+        (final List<int> x) =>
+            ChaCha20.encrypt(data: Uint8List.fromList(x), key: key, iv: iv),
       );
-
-  static Uint8List decryptBytes({
-    required final Uint8List data,
-    required final Uint8List key,
-  }) {
-    final EncryptedWithIV combined = EncryptedWithIV.parse(data);
-    print('decryptBytes');
-    print(combined.encrypted);
-    print(combined.iv);
-    return ChaCha20Poly1305.decrypt(
-      encrypted: combined.encrypted,
-      key: key,
-      iv: combined.iv,
-    );
-  }
 
   static Map<dynamic, dynamic> decryptJson({
     required final String data,
     required final Uint8List key,
   }) {
-    final Uint8List bytes = base64Decode(data);
-    final Uint8List decrypted = decryptBytes(data: bytes, key: key);
-    return jsonDecodeMap(utf8.decode(decrypted));
+    final Uint8List decoded = base64Decode(data);
+    final EncryptedWithIV decombined = EncryptedWithIV.parse(decoded);
+    final Uint8List decrypted = ChaCha20.decrypt(
+      encrypted: decombined.encrypted,
+      key: key,
+      iv: decombined.iv,
+    );
+    final String json = utf8.decode(decrypted);
+    return jsonDecodeMap(json);
   }
 
   static Stream<List<int>> decryptStream({
-    required final Stream<List<int>> data,
+    required final Stream<List<int>> encrypted,
     required final Uint8List key,
+    required final Uint8List iv,
   }) =>
-      data.map(
-        (final List<int> x) =>
-            decryptBytes(data: Uint8List.fromList(x), key: key),
+      encrypted.map(
+        (final List<int> x) => ChaCha20.decrypt(
+          encrypted: Uint8List.fromList(x),
+          key: key,
+          iv: iv,
+        ),
       );
 }

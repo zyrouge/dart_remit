@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'package:convert/convert.dart';
 import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
@@ -41,7 +43,7 @@ class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
         headers: RemitHttpHeaders.construct(),
       );
     }
-    final String? rangeHeader = request.headers['Range'];
+    final String? rangeHeader = request.headers[RemitHeaderKeys.range];
     final (int?, int?)? range = rangeHeader != null
         ? RemitHttpHeaders.parseRangeHeader(rangeHeader)
         : (null, null);
@@ -52,14 +54,18 @@ class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
       );
     }
     final int size = await file.size();
+    final Uint8List? iv =
+        context.sender.secure ? SecureKey.generate8bytes() : null;
     return shelf.Response.ok(
       connection.optionalEncryptStream(
-        await file.openRead(range.$1, range.$2),
+        stream: await file.openRead(range.$1, range.$2),
+        iv: iv,
       ),
       headers: RemitHttpHeaders.construct(
         secure: context.sender.secure,
         contentType: RemitHttpHeaders.binaryContentType,
         additional: <String, String>{
+          if (iv != null) RemitHeaderKeys.contentNonce: hex.encode(iv),
           'Content-Length': '$size',
         },
       ),
@@ -83,7 +89,7 @@ class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
         secure: connection.secure ?? false,
         additional: <String, String>{
           RemitHeaderKeys.token: connection.token ?? '',
-          if (rangeHeader != null) 'Range': rangeHeader,
+          if (rangeHeader != null) RemitHeaderKeys.range: rangeHeader,
         },
       ),
       body: connection.optionalEncryptJson(<dynamic, dynamic>{
@@ -93,7 +99,13 @@ class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
     if (response.statusCode != 200) {
       throw RemitException.nonSuccessResponse();
     }
-    return connection.optionalDecryptStream(response.stream);
+    final Uint8List? iv = connection.secure ?? false
+        ? nullTake(
+            response.headers[RemitHeaderKeys.contentNonce],
+            (final String x) => Uint8List.fromList(hex.decode(x)),
+          )
+        : null;
+    return connection.optionalDecryptStream(stream: response.stream, iv: iv);
   }
 
   static final RemitSenderServerFilesystemReadRoute instance =

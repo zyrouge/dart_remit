@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:convert/convert.dart';
 
 abstract class SecureKey {
   static final Random random = Random.secure();
@@ -13,9 +12,6 @@ abstract class SecureKey {
     return bytes;
   }
 
-  static Uint8List generate12bytes() => generate(12);
+  static Uint8List generate8bytes() => generate(8);
   static Uint8List generate32bytes() => generate(32);
-
-  List<int> parseHexString(final String data) => hex.decode(data);
-  String toHexString(final List<int> data) => hex.encode(data);
 }
