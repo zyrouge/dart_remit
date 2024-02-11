@@ -2,18 +2,25 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:remit/exports.dart';
 
+typedef RemitSenderOnConnectionRequest = FutureOr<bool> Function({
+  required RemitReceiverBasicInfo receiverInfo,
+  required RemitConnectionAddress receiverAddress,
+});
+
 class RemitSender {
   RemitSender._({
     required this.info,
     required this.server,
     required this.secure,
     required this.logger,
+    required this.onConnectionRequest,
   }) : inviteCode = UUID.generateInviteCode();
 
   final RemitSenderBasicInfo info;
   final RemitServer<RemitServerRouteContext> server;
   final bool secure;
   final RemitLogger logger;
+  final RemitSenderOnConnectionRequest onConnectionRequest;
   String inviteCode;
 
   final Map<int, RemitSenderConnection> connections =
@@ -39,7 +46,11 @@ class RemitSender {
     required final RemitReceiverBasicInfo receiverInfo,
     required final RemitConnectionAddress receiverAddress,
   }) async {
-    // TODO: defer user confirmation
+    final bool acceptConnection = await onConnectionRequest(
+      receiverInfo: receiverInfo,
+      receiverAddress: receiverAddress,
+    );
+    if (!acceptConnection) return;
     final String receiverToken = UUID.generateToken();
     final RemitSenderConnection connection = RemitSenderConnection(
       receiverInfo: receiverInfo,
@@ -152,6 +163,7 @@ class RemitSender {
     required final RemitConnectionAddress address,
     required final bool secure,
     required final RemitLogger logger,
+    required final RemitSenderOnConnectionRequest onConnectionRequest,
   }) async {
     final RemitServer<RemitSenderServerRouteContext> server =
         await RemitServer.createServer(address, routes);
@@ -160,6 +172,7 @@ class RemitSender {
       server: server,
       secure: secure,
       logger: logger,
+      onConnectionRequest: onConnectionRequest,
     );
     await master.initialize();
     return master;

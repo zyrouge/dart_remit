@@ -17,6 +17,11 @@ Future<void> main() async {
     address: RemitConnectionAddress(host, 0),
     secure: true,
     logger: logger,
+    onConnectionRequest: ({
+      required final RemitConnectionAddress receiverAddress,
+      required final RemitReceiverBasicInfo receiverInfo,
+    }) =>
+        true,
   );
   final RemitReceiver receiver = await RemitReceiver.create(
     info: const RemitReceiverBasicInfo(
