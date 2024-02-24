@@ -34,7 +34,7 @@ class RemitReceiverConnection with RemitOptionalDataEncrypter {
       RemitSenderServerConnectionSecretRoute.instance
           .makeRequest(this, keyPair: keyPair);
 
-  Future<RemitSenderServerFilesystemListData> filesystemList(
+  Future<RemitSenderServerFilesystemRouteData> filesystemList(
     final String path,
   ) =>
       RemitSenderServerFilesystemListRoute.instance
