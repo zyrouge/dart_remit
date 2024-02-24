@@ -146,7 +146,7 @@ class RemitSender {
     }
   }
 
-  static const String filesystemRootBasename = '/';
+  static const String filesystemRootBasename = 'root';
 
   static final List<RemitSenderServerRoute> routes = <RemitSenderServerRoute>[
     RemitSenderServerConnectionRequestRoute.instance,

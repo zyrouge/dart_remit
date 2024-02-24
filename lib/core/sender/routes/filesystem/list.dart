@@ -40,23 +40,11 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
         headers: RemitHttpHeaders.construct(),
       );
     }
-    final List<RemitFileStaticData> files = <RemitFileStaticData>[];
-    final List<RemitFolderStaticData> folders = <RemitFolderStaticData>[];
-    await for (final RemitFilesystemEntity x in await folder.list()) {
-      if (x is RemitFile) {
-        files.add(await x.toStaticData());
-      } else if (x is RemitFolder) {
-        folders.add(await x.toStaticData());
-      }
-    }
+    final RemitFilesystemStaticDataPairs pairs =
+        await folder.listAsStaticDataPairs();
     return shelf.Response.ok(
       RemitDataBody.successful(
-        connection.optionalEncryptJson(
-          RemitFilesystemStaticDataPairs(
-            files: files,
-            folders: folders,
-          ).toJson(),
-        ),
+        connection.optionalEncryptJson(pairs.toJson()),
       ),
       headers: RemitHttpHeaders.construct(secure: context.sender.secure),
     );

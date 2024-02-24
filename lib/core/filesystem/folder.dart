@@ -37,6 +37,19 @@ abstract class RemitFolder extends RemitFilesystemEntity {
     return resolved != null;
   }
 
+  Future<RemitFilesystemStaticDataPairs> listAsStaticDataPairs() async {
+    final List<RemitFileStaticData> files = <RemitFileStaticData>[];
+    final List<RemitFolderStaticData> folders = <RemitFolderStaticData>[];
+    await for (final RemitFilesystemEntity x in await list()) {
+      if (x is RemitFile) {
+        files.add(await x.toStaticData());
+      } else if (x is RemitFolder) {
+        folders.add(await x.toStaticData());
+      }
+    }
+    return RemitFilesystemStaticDataPairs(files: files, folders: folders);
+  }
+
   Future<RemitFolderStaticData> toStaticData() async =>
       RemitFolderStaticData(basename: basename);
 
