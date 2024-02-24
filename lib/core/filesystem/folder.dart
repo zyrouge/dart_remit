@@ -37,6 +37,22 @@ abstract class RemitFolder extends RemitFilesystemEntity {
     return resolved != null;
   }
 
+  Future<RemitFolderStaticData> toStaticData() async =>
+      RemitFolderStaticData(basename: basename);
+
   @override
   RemitFilesystemEntityType get type => RemitFilesystemEntityType.folder;
+}
+
+class RemitFolderStaticData {
+  const RemitFolderStaticData({
+    required this.basename,
+  });
+
+  factory RemitFolderStaticData.fromJson(final Map<dynamic, dynamic> json) =>
+      RemitFolderStaticData(basename: json[0] as String);
+
+  final String basename;
+
+  Map<dynamic, dynamic> toJson() => <dynamic, dynamic>{0: basename};
 }
