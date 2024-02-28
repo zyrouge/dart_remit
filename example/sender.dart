@@ -22,6 +22,7 @@ Future<void> main() async {
     }) =>
         true,
   );
+  logger.info('SenderExample', 'invite code: ${sender.inviteCode}');
   const String testFileContent = 'Hello World!';
   final RemitVirtualFile testFile = RemitVirtualFile(
     basename: 'test.txt',
