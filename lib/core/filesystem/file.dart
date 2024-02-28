@@ -20,10 +20,14 @@ class RemitFileStaticData {
   });
 
   factory RemitFileStaticData.fromJson(final Map<dynamic, dynamic> json) =>
-      RemitFileStaticData(basename: json[0] as String, size: json[1] as int);
+      RemitFileStaticData(
+        basename: json['0'] as String,
+        size: json['1'] as int,
+      );
 
   final String basename;
   final int size;
 
-  Map<dynamic, dynamic> toJson() => <dynamic, dynamic>{0: basename, 1: size};
+  Map<dynamic, dynamic> toJson() =>
+      <dynamic, dynamic>{'0': basename, '1': size};
 }

@@ -66,9 +66,11 @@ class RemitSenderServerFilesystemListRoute extends RemitSenderServerRoute {
         RemitDataKeys.path: path,
       }),
     );
-    return RemitDataBody.deconstructJsonDataFactory(
+    return RemitDataBody.deconstructDataFactory(
       resp.body,
-      RemitFilesystemStaticDataPairs.fromJson,
+      (final String body) => RemitFilesystemStaticDataPairs.fromJson(
+        connection.optionalDecryptJson(body),
+      ),
     );
   }
 

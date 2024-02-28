@@ -13,7 +13,7 @@ mixin RemitOptionalDataEncrypter {
     return jsonEncode(data);
   }
 
-  Map<dynamic, dynamic>? optionalDecryptJsonOrNull(final String data) {
+  Map<dynamic, dynamic> optionalDecryptJson(final String data) {
     if (requiresEncryption) {
       final Uint8List? key = secret;
       if (key == null) {
@@ -22,6 +22,13 @@ mixin RemitOptionalDataEncrypter {
       return RemitDataEncrypter.decryptJson(data: data, key: key);
     }
     return jsonDecodeMap(data);
+  }
+
+  Map<dynamic, dynamic>? optionalDecryptJsonOrNull(final String data) {
+    try {
+      return optionalDecryptJson(data);
+    } catch (_) {}
+    return null;
   }
 
   Stream<List<int>> optionalEncryptStream({

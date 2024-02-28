@@ -63,9 +63,9 @@ class RemitFolderStaticData {
   });
 
   factory RemitFolderStaticData.fromJson(final Map<dynamic, dynamic> json) =>
-      RemitFolderStaticData(basename: json[0] as String);
+      RemitFolderStaticData(basename: json['0'] as String);
 
   final String basename;
 
-  Map<dynamic, dynamic> toJson() => <dynamic, dynamic>{0: basename};
+  Map<dynamic, dynamic> toJson() => <dynamic, dynamic>{'0': basename};
 }

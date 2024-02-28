@@ -47,6 +47,28 @@ class RemitDataBody<T> {
     }
   }
 
+  static T deconstructData<T>(final String body) {
+    final RemitDataBody<T> data = RemitDataBody.deconstruct(body);
+    if (!data.success) {
+      throw data.error ?? RemitException.nonSuccessResponse();
+    }
+    if (data.data == null) {
+      throw RemitException.unexpectedResponseData();
+    }
+    return data.data as T;
+  }
+
+  static V deconstructDataFactory<U, V>(
+    final String body,
+    final V Function(U) factoryFn,
+  ) {
+    final U data = deconstructData(body);
+    try {
+      return factoryFn(data);
+    } catch (_) {}
+    throw RemitException.unexpectedResponseData();
+  }
+
   static Map<dynamic, dynamic> deconstructJsonData<T>(final String body) {
     final RemitJsonDataBody data = RemitDataBody.deconstruct(body);
     if (!data.success) {
@@ -62,15 +84,12 @@ class RemitDataBody<T> {
     final String body,
     final T Function(Map<dynamic, dynamic>) factoryFn,
   ) {
-    final RemitJsonDataBody data = RemitDataBody.deconstruct(body);
-    if (!data.success) {
-      throw data.error ?? RemitException.nonSuccessResponse();
-    }
-    final T? info = jsonFactoryOrNull(data.data, factoryFn);
-    if (info == null) {
+    final Map<dynamic, dynamic> json = deconstructJsonData(body);
+    final T? data = jsonFactoryOrNull(json, factoryFn);
+    if (data == null) {
       throw RemitException.unexpectedResponseData();
     }
-    return info;
+    return data;
   }
 
   static String successful<T>([final T? data]) => construct<T>(true, data);
