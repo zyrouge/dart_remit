@@ -42,11 +42,11 @@ Future<void> main() async {
     content: utf8.encode(testFileContent),
   );
   sender.filesystem.addEntity(testFile);
-  final RemitSenderServerFilesystemListData files =
+  final RemitFilesystemStaticDataPairs files =
       await receiver.connection.filesystemList('');
   assert(files.folders.isEmpty);
   assert(files.files.length == 1);
-  assert(files.files.first == testFile.basename);
+  assert(files.files.first.basename == testFile.basename);
   final Stream<List<int>> nTestFileDataStream =
       await receiver.connection.filesystemRead(testFile.basename);
   final BytesBuilder nTestFileData = await nTestFileDataStream.fold(
