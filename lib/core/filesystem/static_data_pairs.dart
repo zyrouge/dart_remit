@@ -29,4 +29,8 @@ class RemitFilesystemStaticDataPairs {
         RemitDataKeys.folders:
             folders.map((final RemitFolderStaticData x) => x.toJson()).toList(),
       };
+
+  int get length => files.length + folders.length;
+  bool get isEmpty => files.isEmpty && files.isEmpty;
+  bool get isNotEmpty => files.isNotEmpty && folders.isNotEmpty;
 }
