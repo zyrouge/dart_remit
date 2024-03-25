@@ -32,5 +32,5 @@ class RemitFilesystemStaticDataPairs {
 
   int get length => files.length + folders.length;
   bool get isEmpty => files.isEmpty && files.isEmpty;
-  bool get isNotEmpty => files.isNotEmpty && folders.isNotEmpty;
+  bool get isNotEmpty => files.isNotEmpty || folders.isNotEmpty;
 }
