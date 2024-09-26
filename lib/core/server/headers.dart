@@ -1,5 +1,8 @@
+import 'package:remit/utils/semver.dart';
+
 class RemitHttpHeaders {
-  static const String userAgent = 'Remit v0';
+  static final String userAgent = 'Remit v$version';
+  static const SemVer version = SemVer(0, 0, 1);
   static const String jsonContentType = 'application/json';
   static const String binaryContentType = 'application/octet-stream';
 
@@ -10,6 +13,7 @@ class RemitHttpHeaders {
   }) {
     final Map<String, String> out = <String, String>{
       'User-Agent': userAgent,
+      'Remit-Version': version.toString(),
       if (contentType != null) 'Content-Type': contentType,
       if (secure) 'Remit-Secure': '1',
       if (additional != null) ...additional,
