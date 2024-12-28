@@ -2,6 +2,16 @@ abstract class RemitLogger {
   const RemitLogger();
 
   void info(final String tag, final String text);
-  void warn(final String tag, final String text, [final Object? err]);
-  void error(final String tag, final String text, [final Object? err]);
+  void warn(
+    final String tag,
+    final String text, [
+    final Object? err,
+    final Object? stackTrace,
+  ]);
+  void error(
+    final String tag,
+    final String text, [
+    final Object? err,
+    final Object? stackTrace,
+  ]);
 }
