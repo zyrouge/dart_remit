@@ -43,7 +43,8 @@ class RemitReceiver {
       } catch (error) {
         logger.error(
           'RemitReceiver',
-          'fetching secret failed, destroying (err: $error)',
+          'fetching secret failed, destroying...',
+          error,
         );
         _connectionCompleter
             .completeError(RemitException.cannotFetchSecretKey());
@@ -96,8 +97,19 @@ class RemitReceiver {
   void startHeartbeat() {
     heartbeatTimer =
         Timer.periodic(RemitHttpDefaults.heartbeatInterval, (final _) async {
-      if (!active) return;
-      final bool awake = await connection.ping();
+      if (!active) {
+        return;
+      }
+      bool awake = false;
+      try {
+        awake = await connection.ping();
+      } catch (err) {
+        logger.error(
+          'RemitSender',
+          'ping request to ${connection.debugUsername} failed',
+          err,
+        );
+      }
       if (!awake) {
         logger.warn(
           'RemitReceiver',

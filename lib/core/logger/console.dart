@@ -9,12 +9,18 @@ class RemitConsoleLogger implements RemitLogger {
   }
 
   @override
-  void warn(final String tag, final String text) {
+  void warn(final String tag, final String text, [final Object? err]) {
     print('WARN $tag: $text');
+    if (err != null) {
+      print(err);
+    }
   }
 
   @override
-  void error(final String tag, final String text) {
+  void error(final String tag, final String text, [final Object? err]) {
     print('ERROR! $tag: $text');
+    if (err != null) {
+      print(err);
+    }
   }
 }

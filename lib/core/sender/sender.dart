@@ -50,7 +50,9 @@ class RemitSender {
       receiverInfo: receiverInfo,
       receiverAddress: receiverAddress,
     );
-    if (!acceptConnection) return;
+    if (!acceptConnection) {
+      return;
+    }
     final String receiverToken = UUID.generateToken();
     final RemitSenderConnection connection = RemitSenderConnection(
       receiverInfo: receiverInfo,
@@ -79,7 +81,9 @@ class RemitSender {
 
   Future<void> removeConnection(final int receiverId) async {
     final RemitSenderConnection? connection = connections.remove(receiverId);
-    if (connection == null) return;
+    if (connection == null) {
+      return;
+    }
     logger.info(
       'RemitSender',
       'disconnecting from ${connection.debugUsername}',
@@ -119,8 +123,19 @@ class RemitSender {
         Timer.periodic(RemitHttpDefaults.heartbeatInterval, (final _) async {
       for (final MapEntry<int, RemitSenderConnection> x
           in connections.entries) {
-        if (!active) return;
-        final bool awake = await x.value.ping();
+        if (!active) {
+          return;
+        }
+        bool awake = false;
+        try {
+          awake = await x.value.ping();
+        } catch (err) {
+          logger.error(
+            'RemitSender',
+            'ping request to ${x.value.debugUsername} failed',
+            err,
+          );
+        }
         if (!awake) {
           logger.warn(
             'RemitSender',
