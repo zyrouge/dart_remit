@@ -69,10 +69,10 @@ packages:
     dependency: "direct main"
     description:
       name: meta
-      sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c
+      sha256: bdb68674043280c3428e9ec998512fb681678676b3c54e773629ffe74419f8c7
       url: "https://pub.dev"
     source: hosted
-    version: "1.16.0"
+    version: "1.15.0"
   path:
     dependency: "direct main"
     description:
@@ -166,7 +166,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: f981703db97422e582826e40f6399532abd34977
+      resolved-ref: c5050ed5989e708686c1b2aaf0718b5147cf56d9
       url: "https://github.com/zyrouge/dart_zlint.git"
     source: git
     version: "0.0.0"
