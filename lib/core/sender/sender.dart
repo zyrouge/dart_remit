@@ -7,6 +7,9 @@ typedef RemitSenderOnConnectionRequest = FutureOr<bool> Function({
   required RemitConnectionAddress receiverAddress,
 });
 
+typedef RemitSenderUpdateFilesystem = List<RemitEventFilesystemUpdatedPairs>
+    Function(RemitVirtualFolder root);
+
 class RemitSender {
   RemitSender._({
     required this.info,
@@ -112,9 +115,19 @@ class RemitSender {
     return secretKey;
   }
 
-  void updateFilesystem(final void Function(RemitVirtualFolder root) updater) {
-    // TODO: emit fs update event
-    updater(filesystem);
+  void updateFilesystem(final RemitSenderUpdateFilesystem updater) {
+    final List<RemitEventFilesystemUpdatedPairs> pairs = updater(filesystem);
+    for (final RemitSenderConnection x in connections.values) {
+      try {
+        x.onFileSystemUpdated(pairs);
+      } catch (err) {
+        logger.error(
+          'RemitSender',
+          'event updated filesystem request to ${x.debugUsername} failed',
+          err,
+        );
+      }
+    }
     logger.info('RemitReceiver', 'updated filesystem');
   }
 

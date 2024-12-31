@@ -16,4 +16,5 @@ class RemitDataKeys {
   static const String path = 'path';
   static const String files = 'files';
   static const String folders = 'folders';
+  static const String pairs = 'pairs';
 }

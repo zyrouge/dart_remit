@@ -2,12 +2,17 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:remit/exports.dart';
 
+typedef RemitReceiverOnFilesystemUpdated = void Function(
+  List<RemitEventFilesystemUpdatedPairs> pairs,
+);
+
 class RemitReceiver {
   RemitReceiver._({
     required this.info,
     required this.server,
     required this.connection,
     required this.logger,
+    required this.onFilesystemUpdated,
   });
 
   final RemitReceiverBasicInfo info;
@@ -15,6 +20,7 @@ class RemitReceiver {
   final RemitReceiverConnection connection;
   final RemitLogger logger;
   final RemitEventer<String> events = RemitEventer<String>();
+  final RemitReceiverOnFilesystemUpdated onFilesystemUpdated;
 
   bool active = false;
   Timer? heartbeatTimer;
@@ -153,6 +159,7 @@ class RemitReceiver {
     required final RemitConnectionAddress senderAddress,
     required final String inviteCode,
     required final RemitLogger logger,
+    required final RemitReceiverOnFilesystemUpdated onFilesystemUpdated,
   }) async {
     final RemitSenderBasicInfo senderInfo =
         await RemitReceiverConnection.fetchSenderInfo(senderAddress);
@@ -171,6 +178,7 @@ class RemitReceiver {
       server: server,
       connection: connection,
       logger: logger,
+      onFilesystemUpdated: onFilesystemUpdated,
     );
     await receiver.initialize();
     final bool requested = await connection.connectionRequest(inviteCode);

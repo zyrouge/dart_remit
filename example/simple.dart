@@ -35,6 +35,7 @@ Future<void> main() async {
     ),
     inviteCode: sender.inviteCode,
     logger: logger,
+    onFilesystemUpdated: (final _) {},
   );
   const String testFileContent = 'Hello World!';
   final RemitVirtualFile testFile = RemitVirtualFile(

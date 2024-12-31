@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:remit/core/receiver/routes/events/exports.dart';
 import 'package:remit/exports.dart';
 
 class RemitSenderConnection with RemitOptionalDataEncrypter {
@@ -31,6 +32,12 @@ class RemitSenderConnection with RemitOptionalDataEncrypter {
 
   Future<void> disconnect() =>
       RemitReceiverServerConnectionDisconnectRoute.instance.makeRequest(this);
+
+  Future<void> onFileSystemUpdated(
+    final List<RemitEventFilesystemUpdatedPairs> pairs,
+  ) =>
+      RemitReceiverServerEventFilesystemUpdatedRoute.instance
+          .makeRequest(this, pairs: pairs);
 
   String get debugUsername =>
       'u/sndr/${receiverInfo.username}/$receiverAddress';
