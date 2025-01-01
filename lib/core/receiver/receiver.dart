@@ -150,6 +150,7 @@ class RemitReceiver {
       <RemitReceiverServerRoute>[
     RemitReceiverServerConnectionAcceptedRoute.instance,
     RemitReceiverServerConnectionDisconnectRoute.instance,
+    RemitReceiverServerEventFilesystemUpdatedRoute.instance,
     RemitReceiverServerPingRoute.instance,
   ];
 

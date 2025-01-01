@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
@@ -69,23 +72,25 @@ class RemitReceiverServerEventFilesystemUpdatedRoute
     );
   }
 
-  Future<void> makeRequest(
+  Future<bool> makeRequest(
     final RemitSenderConnection connection, {
     required final List<RemitEventFilesystemUpdatedPairs> pairs,
   }) async {
-    await makeRequestPartial(
+    final http.Response resp = await makeRequestPartial(
       address: connection.receiverAddress,
       headers: RemitHttpHeaders.construct(
-        contentType: null,
+        secure: connection.secure,
         additional: <String, String>{
           RemitHeaderKeys.identifier: connection.identifier,
         },
       ),
       body: connection.optionalEncryptJson(<dynamic, dynamic>{
-        RemitDataKeys.pairs:
-            pairs.map((final RemitEventFilesystemUpdatedPairs x) => x.toJson()),
+        RemitDataKeys.pairs: pairs
+            .map((final RemitEventFilesystemUpdatedPairs x) => x.toJson())
+            .toList(),
       }),
     );
+    return resp.statusCode == HttpStatus.ok;
   }
 
   static final RemitReceiverServerEventFilesystemUpdatedRoute instance =

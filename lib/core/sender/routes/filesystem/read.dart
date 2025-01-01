@@ -83,7 +83,7 @@ class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
   }) async {
     final String? rangeHeader =
         RemitHttpHeaders.createRangeHeader(rangeStart, rangeEnd);
-    final http.StreamedResponse response = await makeRequestPartialStreamed(
+    final http.StreamedResponse resp = await makeRequestPartialStreamed(
       address: connection.senderAddress,
       headers: RemitHttpHeaders.construct(
         secure: connection.secure ?? false,
@@ -96,16 +96,16 @@ class RemitSenderServerFilesystemReadRoute extends RemitSenderServerRoute {
         RemitDataKeys.path: path,
       }),
     );
-    if (response.statusCode != 200) {
+    if (resp.statusCode != 200) {
       throw RemitException.nonSuccessResponse();
     }
     final Uint8List? iv = connection.secure ?? false
         ? nullTake(
-            response.headers[RemitHeaderKeys.contentNonce],
+            resp.headers[RemitHeaderKeys.contentNonce],
             (final String x) => Uint8List.fromList(hex.decode(x)),
           )
         : null;
-    return connection.optionalDecryptStream(stream: response.stream, iv: iv);
+    return connection.optionalDecryptStream(stream: resp.stream, iv: iv);
   }
 
   static final RemitSenderServerFilesystemReadRoute instance =

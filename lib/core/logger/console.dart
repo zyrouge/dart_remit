@@ -4,7 +4,22 @@ class RemitConsoleLogger implements RemitLogger {
   const RemitConsoleLogger();
 
   @override
-  void info(final String tag, final String text) {
+  void debug(
+    final String tag,
+    final String text, [
+    final Object? err,
+    final Object? stackTrace,
+  ]) {
+    print('INFO $tag: $text');
+  }
+
+  @override
+  void info(
+    final String tag,
+    final String text, [
+    final Object? err,
+    final Object? stackTrace,
+  ]) {
     print('INFO $tag: $text');
   }
 

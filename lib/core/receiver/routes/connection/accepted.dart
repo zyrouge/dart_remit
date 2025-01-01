@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
@@ -47,7 +49,7 @@ class RemitReceiverServerConnectionAcceptedRoute
         RemitDataKeys.secure: connection.secure,
       }),
     );
-    return resp.statusCode == 200;
+    return resp.statusCode == HttpStatus.ok;
   }
 
   static final RemitReceiverServerConnectionAcceptedRoute instance =

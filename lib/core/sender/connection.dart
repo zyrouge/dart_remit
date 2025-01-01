@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:remit/core/receiver/routes/events/exports.dart';
 import 'package:remit/exports.dart';
 
 class RemitSenderConnection with RemitOptionalDataEncrypter {

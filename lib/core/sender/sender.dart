@@ -7,8 +7,10 @@ typedef RemitSenderOnConnectionRequest = FutureOr<bool> Function({
   required RemitConnectionAddress receiverAddress,
 });
 
-typedef RemitSenderUpdateFilesystem = List<RemitEventFilesystemUpdatedPairs>
-    Function(RemitVirtualFolder root);
+typedef RemitSenderUpdateFilesystem
+    = Future<List<RemitEventFilesystemUpdatedPairs>> Function(
+  RemitVirtualFolder root,
+);
 
 class RemitSender {
   RemitSender._({
@@ -115,11 +117,14 @@ class RemitSender {
     return secretKey;
   }
 
-  void updateFilesystem(final RemitSenderUpdateFilesystem updater) {
-    final List<RemitEventFilesystemUpdatedPairs> pairs = updater(filesystem);
+  Future<void> updateFilesystem(
+    final RemitSenderUpdateFilesystem updater,
+  ) async {
+    final List<RemitEventFilesystemUpdatedPairs> pairs =
+        await updater(filesystem);
     for (final RemitSenderConnection x in connections.values) {
       try {
-        x.onFileSystemUpdated(pairs);
+        await x.onFileSystemUpdated(pairs);
       } catch (err) {
         logger.error(
           'RemitSender',
