@@ -31,4 +31,8 @@ class RemitVirtualFolder extends RemitFolder {
   void addEntity(final RemitFilesystemEntity entity) {
     entities[entity.basename] = entity;
   }
+
+  void removeEntity(final String basename) {
+    entities.remove(basename);
+  }
 }
