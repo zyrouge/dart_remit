@@ -17,4 +17,7 @@ class RemitDataKeys {
   static const String files = 'files';
   static const String folders = 'folders';
   static const String pairs = 'pairs';
+  static const String added = 'added';
+  static const String modified = 'modified';
+  static const String removed = 'removed';
 }

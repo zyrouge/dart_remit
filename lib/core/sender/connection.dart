@@ -33,7 +33,7 @@ class RemitSenderConnection with RemitOptionalDataEncrypter {
       RemitReceiverServerConnectionDisconnectRoute.instance.makeRequest(this);
 
   Future<void> onFileSystemUpdated(
-    final List<RemitEventFilesystemUpdatedPairs> pairs,
+    final RemitEventFilesystemUpdatedPairs pairs,
   ) =>
       RemitReceiverServerEventFilesystemUpdatedRoute.instance
           .makeRequest(this, pairs: pairs);

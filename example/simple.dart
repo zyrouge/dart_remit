@@ -42,19 +42,23 @@ Future<void> main() async {
     basename: 'test.txt',
     content: utf8.encode(testFileContent),
   );
-  sender.updateFilesystem((final RemitVirtualFolder root) async {
+  await sender.updateFilesystem((final RemitVirtualFolder root) async {
     sender.filesystem.addEntity(testFile);
-    return <RemitEventFilesystemUpdatedPairs>[
-      RemitEventFilesystemUpdatedPairs(
-        path: root.basename,
-        pairs: RemitFilesystemStaticDataPairs(
-          files: <RemitFileStaticData>[
-            await testFile.toStaticData(),
-          ],
-          folders: <RemitFolderStaticData>[],
+    return RemitEventFilesystemUpdatedPairs(
+      added: <RemitEventFilesystemUpdatedAddedEntity>[
+        RemitEventFilesystemUpdatedAddedEntity(
+          path: root.basename,
+          pairs: RemitFilesystemStaticDataPairs(
+            files: <RemitFileStaticData>[
+              await testFile.toStaticData(),
+            ],
+            folders: <RemitFolderStaticData>[],
+          ),
         ),
-      ),
-    ];
+      ],
+      modified: <RemitEventFilesystemUpdatedAddedEntity>[],
+      removed: <String>[],
+    );
   });
   final RemitFilesystemStaticDataPairs files =
       await receiver.connection.filesystemList('');

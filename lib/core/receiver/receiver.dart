@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:remit/exports.dart';
 
 typedef RemitReceiverOnFilesystemUpdated = void Function(
-  List<RemitEventFilesystemUpdatedPairs> pairs,
+  RemitEventFilesystemUpdatedPairs pairs,
 );
 
 class RemitReceiver {

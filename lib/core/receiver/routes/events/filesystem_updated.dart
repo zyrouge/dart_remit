@@ -1,19 +1,18 @@
 import 'dart:io';
-
 import 'package:http/http.dart' as http;
 import 'package:remit/exports.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
-class RemitEventFilesystemUpdatedPairs {
-  const RemitEventFilesystemUpdatedPairs({
+class RemitEventFilesystemUpdatedAddedEntity {
+  const RemitEventFilesystemUpdatedAddedEntity({
     required this.path,
     required this.pairs,
   });
 
-  factory RemitEventFilesystemUpdatedPairs.fromJson(
+  factory RemitEventFilesystemUpdatedAddedEntity.fromJson(
     final Map<dynamic, dynamic> json,
   ) =>
-      RemitEventFilesystemUpdatedPairs(
+      RemitEventFilesystemUpdatedAddedEntity(
         path: json[RemitDataKeys.path] as String,
         pairs: RemitFilesystemStaticDataPairs.fromJson(
           json[RemitDataKeys.pairs] as Map<dynamic, dynamic>,
@@ -26,6 +25,43 @@ class RemitEventFilesystemUpdatedPairs {
   Map<dynamic, dynamic> toJson() => <dynamic, dynamic>{
         RemitDataKeys.path: path,
         RemitDataKeys.pairs: pairs.toJson(),
+      };
+}
+
+class RemitEventFilesystemUpdatedPairs {
+  const RemitEventFilesystemUpdatedPairs({
+    required this.added,
+    required this.modified,
+    required this.removed,
+  });
+
+  factory RemitEventFilesystemUpdatedPairs.fromJson(
+    final Map<dynamic, dynamic> json,
+  ) =>
+      RemitEventFilesystemUpdatedPairs(
+        added: (json[RemitDataKeys.added] as List<dynamic>)
+            .cast<Map<dynamic, dynamic>>()
+            .map(RemitEventFilesystemUpdatedAddedEntity.fromJson)
+            .toList(),
+        modified: (json[RemitDataKeys.modified] as List<dynamic>)
+            .cast<Map<dynamic, dynamic>>()
+            .map(RemitEventFilesystemUpdatedAddedEntity.fromJson)
+            .toList(),
+        removed: (json[RemitDataKeys.removed] as List<dynamic>).cast<String>(),
+      );
+
+  final List<RemitEventFilesystemUpdatedAddedEntity> added;
+  final List<RemitEventFilesystemUpdatedAddedEntity> modified;
+  final List<String> removed;
+
+  Map<dynamic, dynamic> toJson() => <dynamic, dynamic>{
+        RemitDataKeys.added: added
+            .map((final RemitEventFilesystemUpdatedAddedEntity x) => x.toJson())
+            .toList(),
+        RemitDataKeys.modified: added
+            .map((final RemitEventFilesystemUpdatedAddedEntity x) => x.toJson())
+            .toList(),
+        RemitDataKeys.removed: removed,
       };
 }
 
@@ -51,13 +87,10 @@ class RemitReceiverServerEventFilesystemUpdatedRoute
     final String body = await request.readAsString();
     final Map<dynamic, dynamic>? data =
         context.receiver.connection.optionalDecryptJsonOrNull(body);
-    final List<RemitEventFilesystemUpdatedPairs>? pairs = mapKeyFactoryOrNull(
+    final RemitEventFilesystemUpdatedPairs? pairs = mapKeyFactoryOrNull(
       data,
       RemitDataKeys.pairs,
-      (final List<dynamic> x) => x
-          .cast<Map<dynamic, dynamic>>()
-          .map(RemitEventFilesystemUpdatedPairs.fromJson)
-          .toList(),
+      RemitEventFilesystemUpdatedPairs.fromJson,
     );
     if (pairs == null) {
       return shelf.Response.badRequest(
@@ -72,9 +105,9 @@ class RemitReceiverServerEventFilesystemUpdatedRoute
     );
   }
 
-  Future<bool> makeRequest(
+  Future<void> makeRequest(
     final RemitSenderConnection connection, {
-    required final List<RemitEventFilesystemUpdatedPairs> pairs,
+    required final RemitEventFilesystemUpdatedPairs pairs,
   }) async {
     final http.Response resp = await makeRequestPartial(
       address: connection.receiverAddress,
@@ -85,12 +118,12 @@ class RemitReceiverServerEventFilesystemUpdatedRoute
         },
       ),
       body: connection.optionalEncryptJson(<dynamic, dynamic>{
-        RemitDataKeys.pairs: pairs
-            .map((final RemitEventFilesystemUpdatedPairs x) => x.toJson())
-            .toList(),
+        RemitDataKeys.pairs: pairs.toJson(),
       }),
     );
-    return resp.statusCode == HttpStatus.ok;
+    if (resp.statusCode != HttpStatus.ok) {
+      throw RemitException.nonSuccessResponse();
+    }
   }
 
   static final RemitReceiverServerEventFilesystemUpdatedRoute instance =
