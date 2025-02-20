@@ -11,7 +11,7 @@ dependencies:
     http: ^1.2.2
     meta: 1.15.0
     path: ^1.9.1
-    pointycastle: ^3.9.1
+    pointycastle: ^4.0.0
     shelf: ^1.4.2
     shelf_router: ^1.1.4
 
